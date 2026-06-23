@@ -283,12 +283,14 @@
 }
 
 .mi-agrupacion-sql-textarea {
+  width: 100%;
   background: var(--background-primary);
   color: var(--text-normal);
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   padding: 12px;
-  min-height: 120px;
+  min-height: 100px;
+  resize: vertical;
   transition: border-color 0.2s;
 }
 
@@ -436,4 +438,40 @@
 
 .mi-agrupacion-full-width {
   width: 100%;
+  margin-bottom: 8px;
+}
+
+.mi-agrupacion-input-sm {
+  width: 180px;
+}
+
+.mi-agrupacion-input-md {
+  width: 200px;
+}
+
+.mi-agrupacion-preview-box {
+  margin-top: 12px;
+  padding: 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.mi-agrupacion-record-list-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.mi-agrupacion-record-row {
+  padding: 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+}
+
+.mi-agrupacion-kpi-clickable {
+  cursor: pointer;
+}
+
+.mi-agrupacion-code-display-bold {
+  font-size: 18px;
+  font-weight: bold;
 }

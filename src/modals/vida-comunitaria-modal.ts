@@ -118,7 +118,7 @@ export class VidaComunitariaModal extends Modal {
             .setName("Sector")
             .addDropdown((d) => {
                 this.dataManager.getSectores().forEach((s) => { d.addOption(s, s); });
-                d.setValue(this.sector).onChange((v) => (this.sector = v));
+                d.setValue(this.sector).onChange((v) => { this.sector = v; });
             });
 
         new Setting(form)
@@ -126,7 +126,7 @@ export class VidaComunitariaModal extends Modal {
             .addDropdown((d) => {
                 TIPOS_ACTIVIDAD.forEach((t) => { d.addOption(t, t); });
                 d.setValue(this.tipoActividad).onChange(
-                    (v) => (this.tipoActividad = v)
+                    (v) => { this.tipoActividad = v; }
                 );
             });
 
@@ -134,7 +134,7 @@ export class VidaComunitariaModal extends Modal {
             .setName("Nombre del evento")
             .addText((t) =>
                 t.setPlaceholder("Nombre").onChange(
-                    (v) => (this.nombreEvento = v.trim())
+                    (v) => { this.nombreEvento = v.trim(); }
                 )
             );
 
@@ -160,7 +160,7 @@ export class VidaComunitariaModal extends Modal {
             .setName("Descripción")
             .addTextArea((t) =>
                 t.setPlaceholder("Describe la actividad...").onChange(
-                    (v) => (this.descripcion = v)
+                    (v) => { this.descripcion = v; }
                 )
             );
 
@@ -177,7 +177,7 @@ export class VidaComunitariaModal extends Modal {
             type: "text",
             placeholder: "Buscar nombre...",
         });
-        input.setCssStyles({ width: "200px" });
+        input.addClass("mi-agrupacion-input-md");
 
         new MaestroSuggest(
             this.app,
@@ -224,7 +224,7 @@ export class VidaComunitariaModal extends Modal {
                 text: nombre,
             });
             const removeBtn = tag.createEl("span", { text: " ×" });
-            removeBtn.setCssStyles({ cursor: "pointer" });
+            removeBtn.addClass("mi-agrupacion-tag-close");
             removeBtn.addEventListener("click", () => {
                 this.asistBahais = this.asistBahais.filter(
                     (m) => m !== nombre

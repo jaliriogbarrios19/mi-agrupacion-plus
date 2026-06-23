@@ -140,7 +140,7 @@ export class VisitaModal extends Modal {
             .addDropdown((d) => {
                 for (const s of this.dataManager.getSectores()) d.addOption(s, s);
                 d.setValue(this.sector).onChange(
-                    (v: string) => (this.sector = v)
+                    (v: string) => { this.sector = v; }
                 );
             });
 
@@ -151,20 +151,20 @@ export class VisitaModal extends Modal {
             .addDropdown((d) => {
                 CONDICIONES.forEach((c) => { d.addOption(c, c); });
                 d.setValue(this.condicion).onChange(
-                    (v) => (this.condicion = v)
+                    (v) => { this.condicion = v; }
                 );
             });
 
         new Setting(form)
             .setName("Hogar nuevo")
             .addToggle((t) =>
-                t.setValue(false).onChange((v) => (this.hogarNuevo = v))
+                t.setValue(false).onChange((v) => { this.hogarNuevo = v; })
             );
 
         new Setting(form)
             .setName("Hubo oración")
             .addToggle((t) =>
-                t.setValue(false).onChange((v) => (this.huboOracion = v))
+                t.setValue(false).onChange((v) => { this.huboOracion = v; })
             );
 
         new Setting(form)
@@ -172,7 +172,7 @@ export class VisitaModal extends Modal {
             .addToggle((t) =>
                 t
                     .setValue(false)
-                    .onChange((v) => (this.campanaExpansion = v))
+                    .onChange((v) => { this.campanaExpansion = v; })
             );
 
         this.renderMaestrosField(form);
@@ -181,7 +181,7 @@ export class VisitaModal extends Modal {
             .setName("Propósito de la visita")
             .addText((t) =>
                 t.setPlaceholder("Ej: Amistad, Programa educativo").onChange(
-                    (v) => (this.proposito = v.trim())
+                    (v) => { this.proposito = v.trim(); }
                 )
             );
 
@@ -189,7 +189,7 @@ export class VisitaModal extends Modal {
             .setName("Resumen")
             .addTextArea((t) =>
                 t.setPlaceholder("Resumen de la visita...").onChange(
-                    (v) => (this.resumen = v)
+                    (v) => { this.resumen = v; }
                 )
             );
 
@@ -210,7 +210,7 @@ export class VisitaModal extends Modal {
             type: "text",
             placeholder: "Nombre",
         });
-        input.setCssStyles({ width: "180px" });
+        input.addClass("mi-agrupacion-input-sm");
         const addBtn = row.createEl("button", { text: "Agregar" });
         this.visitadosContainer = wrapper.createDiv();
         this.renderVisitadoChips();
@@ -239,7 +239,7 @@ export class VisitaModal extends Modal {
                 text: nombre,
             });
             const x = chip.createEl("span", { text: " ×" });
-            x.setCssStyles({ cursor: "pointer" });
+            x.addClass("mi-agrupacion-tag-close");
             x.addEventListener("click", () => {
                 this.nombresVisitados = this.nombresVisitados.filter(
                     (n) => n !== nombre
@@ -258,7 +258,7 @@ export class VisitaModal extends Modal {
             type: "text",
             placeholder: "Buscar maestro...",
         });
-        input.setCssStyles({ width: "200px" });
+        input.addClass("mi-agrupacion-input-md");
 
         new MaestroSuggest(
             this.app,
@@ -307,7 +307,7 @@ export class VisitaModal extends Modal {
                 text: nombre,
             });
             const removeBtn = tag.createEl("span", { text: " ×" });
-            removeBtn.setCssStyles({ cursor: "pointer" });
+            removeBtn.addClass("mi-agrupacion-tag-close");
             removeBtn.addEventListener("click", () => {
                 this.maestrosSeleccionados =
                     this.maestrosSeleccionados.filter(

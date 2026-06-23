@@ -18,9 +18,11 @@ export function renderAdminPanel(ctx: SettingsContext, containerEl: HTMLElement)
         .addText((text) =>
             text
                 .setValue(ctx.settings.nombreAgrupacion)
-                .onChange(async (value) => {
-                    ctx.settings.nombreAgrupacion = value;
-                    await ctx.saveFn();
+                .onChange((value) => {
+                    void (async () => {
+                        ctx.settings.nombreAgrupacion = value;
+                        await ctx.saveFn();
+                    })();
                 })
         );
 
@@ -40,11 +42,13 @@ function renderSectores(ctx: SettingsContext, containerEl: HTMLElement): void {
             text
                 .setValue(ctx.settings.sectores.join(", "))
                 .setPlaceholder("General, Norte, Sur")
-                .onChange(async (value) => {
-                    ctx.settings.sectores = value.split(",").map((s) => s.trim()).filter(Boolean);
-                    await ctx.saveAndSyncSectores();
+                .onChange((value) => {
+                    void (async () => {
+                        ctx.settings.sectores = value.split(",").map((s) => s.trim()).filter(Boolean);
+                        await ctx.saveAndSyncSectores();
+                    })();
                 });
-            text.inputEl.style.width = "100%";
+            text.inputEl.addClass("mi-agrupacion-full-width");
             text.inputEl.rows = 3;
         });
 }
@@ -58,22 +62,24 @@ function renderInvitation(ctx: SettingsContext, containerEl: HTMLElement): void 
 
     new Setting(codeDiv)
         .addButton((btn) =>
-            btn.setButtonText("Generar código").setCta().onClick(async () => {
-                btn.setDisabled(true);
-                const res = await rpcGenerateInvitation(ctx.settings.vaultId);
-                if (res.success && res.code) {
-                    codeDisplay.empty();
-                    codeDisplay.createEl("code", { text: res.code }).setCssStyles({ fontSize: "18px", fontWeight: "bold" });
-                    new Setting(codeDiv).addButton((copyBtn) =>
-                        copyBtn.setButtonText("Copiar").onClick(() => {
-                            void navigator.clipboard.writeText(res.code!);
-                            new Notice("Código copiado");
-                        })
-                    );
-                } else {
-                    new Notice(res.error || "Error al generar código");
-                }
-                btn.setDisabled(false);
+            btn.setButtonText("Generar código").setCta().onClick(() => {
+                void (async () => {
+                    btn.setDisabled(true);
+                    const res = await rpcGenerateInvitation(ctx.settings.vaultId);
+                    if (res.success && res.code) {
+                        codeDisplay.empty();
+                        codeDisplay.createEl("code", { text: res.code }).addClass("mi-agrupacion-code-display-bold");
+                        new Setting(codeDiv).addButton((copyBtn) =>
+                            copyBtn.setButtonText("Copiar").onClick(() => {
+                                void navigator.clipboard.writeText(res.code!);
+                                new Notice("Código copiado");
+                            })
+                        );
+                    } else {
+                        new Notice(res.error || "Error al generar código");
+                    }
+                    btn.setDisabled(false);
+                })();
             })
         );
 }
@@ -91,9 +97,11 @@ function renderSyncSettings(ctx: SettingsContext, containerEl: HTMLElement): voi
                 .addOption("5", "5 minutos")
                 .addOption("10", "10 minutos")
                 .setValue(String(ctx.settings.syncInterval))
-                .onChange(async (value) => {
-                    ctx.settings.syncInterval = parseInt(value, 10);
-                    await ctx.saveFn();
+                .onChange((value) => {
+                    void (async () => {
+                        ctx.settings.syncInterval = parseInt(value, 10);
+                        await ctx.saveFn();
+                    })();
                 })
         );
 
@@ -116,14 +124,16 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
         new Setting(containerEl)
             .setName(`Conectado como ${session.email}`)
             .addButton((btn) =>
-                btn.setButtonText("Cerrar sesión").onClick(async () => {
-                    await logout();
-                    ctx.settings.authToken = "";
-                    ctx.settings.authEmail = "";
-                    ctx.settings.authRefreshToken = "";
-                    await ctx.saveFn();
-                    new Notice("Sesión cerrada");
-                    ctx.render();
+                btn.setButtonText("Cerrar sesión").onClick(() => {
+                    void (async () => {
+                        await logout();
+                        ctx.settings.authToken = "";
+                        ctx.settings.authEmail = "";
+                        ctx.settings.authRefreshToken = "";
+                        await ctx.saveFn();
+                        new Notice("Sesión cerrada");
+                        ctx.render();
+                    })();
                 })
             );
     } else if (isSessionExpired()) {
@@ -131,10 +141,12 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
             .setName("Sesión expirada")
             .addButton((btn) =>
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
-                    new LoginModal(ctx.app, async (email) => {
-                        ctx.settings.authEmail = email;
-                        await ctx.saveFn();
-                        ctx.render();
+                    new LoginModal(ctx.app, (email) => {
+                        void (async () => {
+                            ctx.settings.authEmail = email;
+                            await ctx.saveFn();
+                            ctx.render();
+                        })();
                     }).open();
                 })
             );
@@ -143,10 +155,12 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
             .setName("Iniciá sesión para sincronizar")
             .addButton((btn) =>
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
-                    new LoginModal(ctx.app, async (email) => {
-                        ctx.settings.authEmail = email;
-                        await ctx.saveFn();
-                        ctx.render();
+                    new LoginModal(ctx.app, (email) => {
+                        void (async () => {
+                            ctx.settings.authEmail = email;
+                            await ctx.saveFn();
+                            ctx.render();
+                        })();
                     }).open();
                 })
             );

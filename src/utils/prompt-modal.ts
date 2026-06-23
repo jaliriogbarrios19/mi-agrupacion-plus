@@ -19,7 +19,7 @@ export class PromptModal extends Modal {
 
         new Setting(contentEl).addText((text) => {
             text.setPlaceholder(this.placeholder).onChange(
-                (v) => (this.value = v.trim())
+                (v) => { this.value = v.trim(); }
             );
             text.inputEl.addEventListener("keydown", (e) => {
                 if (e.key === "Enter") {

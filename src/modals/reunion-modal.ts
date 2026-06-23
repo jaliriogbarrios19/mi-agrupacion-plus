@@ -114,7 +114,7 @@ export class ReunionModal extends Modal {
             .setName("Sector")
             .addDropdown((d) => {
                 this.dataManager.getSectores().forEach((s) => { d.addOption(s, s); });
-                d.setValue(this.sector).onChange((v) => (this.sector = v));
+                d.setValue(this.sector).onChange((v) => { this.sector = v; });
             });
 
         new Setting(form)
@@ -123,21 +123,17 @@ export class ReunionModal extends Modal {
                 TIPOS_REUNION.forEach((t) => { d.addOption(t, t); });
                 d.setValue(this.tipoReunion).onChange((v) => {
                     this.tipoReunion = v;
-                    this.customContainer.setCssStyles({
-                        display: v === "Otro" ? "block" : "none",
-                    });
+                    this.customContainer.toggleClass("mi-agrupacion-hidden", v !== "Otro");
                 });
             });
 
         this.customContainer = form.createDiv();
-        this.customContainer.setCssStyles({
-            display: this.tipoReunion === "Otro" ? "block" : "none",
-        });
+        this.customContainer.toggleClass("mi-agrupacion-hidden", this.tipoReunion !== "Otro");
         new Setting(this.customContainer)
             .setName("Nombre de la reunión")
             .addText((t) =>
                 t.setPlaceholder("Ej: Reunión de devocionales").setValue(this.nombreCustom).onChange(
-                    (v) => (this.nombreCustom = v.trim())
+                    (v) => { this.nombreCustom = v.trim(); }
                 )
             );
 
@@ -147,7 +143,7 @@ export class ReunionModal extends Modal {
         const resumenArea = resumenSetting.controlEl.createEl("textarea", {
             placeholder: "Resumen de la reunión...",
         });
-        resumenArea.setCssStyles({ width: "100%", minHeight: "100px", resize: "vertical" });
+        resumenArea.addClass("mi-agrupacion-sql-textarea");
         resumenArea.value = this.resumenPublico;
         resumenArea.addEventListener("input", () => {
             this.resumenPublico = resumenArea.value;
@@ -167,7 +163,7 @@ export class ReunionModal extends Modal {
             type: "text",
             placeholder: "Buscar nombre...",
         });
-        input.setCssStyles({ width: "200px" });
+        input.addClass("mi-agrupacion-input-md");
 
         new MaestroSuggest(
             this.app,
@@ -214,7 +210,7 @@ export class ReunionModal extends Modal {
                 text: nombre,
             });
             const removeBtn = tag.createEl("span", { text: " ×" });
-            removeBtn.setCssStyles({ cursor: "pointer" });
+            removeBtn.addClass("mi-agrupacion-tag-close");
             removeBtn.addEventListener("click", () => {
                 this.asistBahais = this.asistBahais.filter(
                     (m) => m !== nombre

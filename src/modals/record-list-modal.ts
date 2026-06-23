@@ -88,7 +88,7 @@ export class RecordListModal extends Modal {
             type: "text",
             placeholder: "Buscar...",
         });
-        searchInput.setCssStyles({ width: "100%", marginBottom: "8px" });
+        searchInput.addClass("mi-agrupacion-full-width");
         const listContainer = contentEl.createDiv();
         let timer: number | null = null;
         searchInput.addEventListener("input", () => {
@@ -112,15 +112,10 @@ export class RecordListModal extends Modal {
             return;
         }
         const list = container.createDiv({ cls: "mi-agrupacion-record-list" });
-        list.setCssStyles({ maxHeight: "60vh", overflowY: "auto" });
+        list.addClass("mi-agrupacion-record-list-scroll");
         for (const rec of filtered) {
             const origIdx = this.records.indexOf(rec);
             const row = list.createDiv({ cls: "mi-agrupacion-record-row" });
-            row.setCssStyles({
-                padding: "6px",
-                borderBottom: "1px solid var(--background-modifier-border)",
-                cursor: "pointer",
-            });
             const name = this.recordLabel(rec);
             const date = String(rec.data.fecha || "");
             row.createSpan({ text: `${date} — ${name}`, cls: "mi-agrupacion-record-name" });

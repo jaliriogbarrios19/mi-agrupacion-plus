@@ -92,7 +92,7 @@ export class ExportModal extends Modal {
 
         // Preview
         this.previewEl = contentEl.createDiv({ cls: "mi-agrupacion-section" });
-        this.previewEl.setCssStyles({ marginTop: "12px", padding: "8px", border: "1px solid var(--background-modifier-border)", borderRadius: "4px" });
+        this.previewEl.addClass("mi-agrupacion-preview-box");
 
         // Actions
         const actions = contentEl.createDiv({ cls: "mi-agrupacion-form-actions" });

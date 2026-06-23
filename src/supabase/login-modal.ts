@@ -28,7 +28,7 @@ export class LoginModal extends Modal {
             .setName("Email")
             .addText((t) =>
                 t.setPlaceholder("correo@ejemplo.com").onChange(
-                    (v) => (this.email = v.trim())
+                    (v) => { this.email = v.trim(); }
                 )
             );
 
@@ -37,7 +37,7 @@ export class LoginModal extends Modal {
             .addText((t) => {
                 t.setPlaceholder("••••••••");
                 t.inputEl.type = "password";
-                t.onChange((v) => (this.password = v));
+                t.onChange((v) => { this.password = v; });
                 t.inputEl.addEventListener("keydown", (e) => {
                     if (e.key === "Enter") { void this.submit(); }
                 });

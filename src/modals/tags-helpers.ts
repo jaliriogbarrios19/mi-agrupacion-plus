@@ -14,7 +14,7 @@ export function renderTagsField(
         type: "text",
         placeholder: "Nombre",
     });
-    input.setCssStyles({ width: "180px" });
+    input.addClass("mi-agrupacion-input-sm");
     const addBtn = row.createEl("button", { text: "Agregar" });
     const chipsEl = wrapper.createDiv();
     setEl(chipsEl);
@@ -48,7 +48,7 @@ export function renderTagChips(
             text: item,
         });
         const x = chip.createEl("span", { text: " ×" });
-        x.setCssStyles({ cursor: "pointer" });
+        x.addClass("mi-agrupacion-tag-close");
         x.addEventListener("click", () => {
             const idx = items.indexOf(item);
             if (idx >= 0) {

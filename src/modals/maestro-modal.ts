@@ -28,7 +28,7 @@ export class MaestroModal extends Modal {
             .addText((text) =>
                 text
                     .setPlaceholder("Nombre completo")
-                    .onChange((v) => (this.nombre = v.trim()))
+                    .onChange((v) => { this.nombre = v.trim(); })
             );
 
         new Setting(form)
@@ -36,7 +36,7 @@ export class MaestroModal extends Modal {
             .addText((text) =>
                 text
                     .setPlaceholder("Ej: Palavecino, Barquisimeto")
-                    .onChange((v) => (this.agrupacion = v.trim()))
+                    .onChange((v) => { this.agrupacion = v.trim(); })
             );
 
         const buttonContainer = contentEl.createDiv({

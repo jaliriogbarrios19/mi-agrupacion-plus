@@ -38,9 +38,11 @@ function renderSyncSettings(ctx: SettingsContext, containerEl: HTMLElement): voi
                 .addOption("5", "5 minutos")
                 .addOption("10", "10 minutos")
                 .setValue(String(ctx.settings.syncInterval))
-                .onChange(async (value) => {
-                    ctx.settings.syncInterval = parseInt(value, 10);
-                    await ctx.saveFn();
+                .onChange((value) => {
+                    void (async () => {
+                        ctx.settings.syncInterval = parseInt(value, 10);
+                        await ctx.saveFn();
+                    })();
                 })
         );
 
@@ -63,14 +65,16 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
         new Setting(containerEl)
             .setName(`Conectado como ${session.email}`)
             .addButton((btn) =>
-                btn.setButtonText("Cerrar sesión").onClick(async () => {
-                    await logout();
-                    ctx.settings.authToken = "";
-                    ctx.settings.authEmail = "";
-                    ctx.settings.authRefreshToken = "";
-                    await ctx.saveFn();
-                    new Notice("Sesión cerrada");
-                    ctx.render();
+                btn.setButtonText("Cerrar sesión").onClick(() => {
+                    void (async () => {
+                        await logout();
+                        ctx.settings.authToken = "";
+                        ctx.settings.authEmail = "";
+                        ctx.settings.authRefreshToken = "";
+                        await ctx.saveFn();
+                        new Notice("Sesión cerrada");
+                        ctx.render();
+                    })();
                 })
             );
     } else if (isSessionExpired()) {
@@ -78,13 +82,15 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
             .setName("Sesión expirada")
             .addButton((btn) =>
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
-                    new LoginModal(ctx.app, async (email) => {
-                        const session = getSession();
-                        ctx.settings.authToken = session.token;
-                        ctx.settings.authEmail = email;
-                        ctx.settings.authRefreshToken = session.refresh;
-                        await ctx.saveFn();
-                        ctx.render();
+                    new LoginModal(ctx.app, (email) => {
+                        void (async () => {
+                            const session = getSession();
+                            ctx.settings.authToken = session.token;
+                            ctx.settings.authEmail = email;
+                            ctx.settings.authRefreshToken = session.refresh;
+                            await ctx.saveFn();
+                            ctx.render();
+                        })();
                     }).open();
                 })
             );
@@ -93,13 +99,15 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
             .setName("Iniciá sesión para sincronizar")
             .addButton((btn) =>
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
-                    new LoginModal(ctx.app, async (email) => {
-                        const session = getSession();
-                        ctx.settings.authToken = session.token;
-                        ctx.settings.authEmail = email;
-                        ctx.settings.authRefreshToken = session.refresh;
-                        await ctx.saveFn();
-                        ctx.render();
+                    new LoginModal(ctx.app, (email) => {
+                        void (async () => {
+                            const session = getSession();
+                            ctx.settings.authToken = session.token;
+                            ctx.settings.authEmail = email;
+                            ctx.settings.authRefreshToken = session.refresh;
+                            await ctx.saveFn();
+                            ctx.render();
+                        })();
                     }).open();
                 })
             );
@@ -113,13 +121,15 @@ function renderChangeMode(ctx: SettingsContext, containerEl: HTMLElement): void 
         .setName("Cambiar agrupación")
         .setDesc("Desconectate de esta agrupación y unite a otra o creá una nueva")
         .addButton((btn) =>
-            btn.setButtonText("Cambiar modo").setWarning().onClick(async () => {
-                ctx.settings.vaultId = "";
-                ctx.settings.vaultName = "";
-                ctx.settings.setupMode = "";
-                await ctx.saveFn();
-                new Notice("Desconectado. Elegí una nueva agrupación.");
-                ctx.render();
+            btn.setButtonText("Cambiar modo").setWarning().onClick(() => {
+                void (async () => {
+                    ctx.settings.vaultId = "";
+                    ctx.settings.vaultName = "";
+                    ctx.settings.setupMode = "";
+                    await ctx.saveFn();
+                    new Notice("Desconectado. Elegí una nueva agrupación.");
+                    ctx.render();
+                })();
             })
         );
 }

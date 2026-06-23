@@ -16,13 +16,13 @@ export interface SettingsContext {
 }
 
 export function renderSetupWizard(ctx: SettingsContext, containerEl: HTMLElement): void {
-    containerEl.createEl("h3", { text: "Mi Agrupacion Plus" });
+    new Setting(containerEl).setHeading().setName("Mi Agrupacion Plus");
     containerEl.createEl("p", {
         text: "Conectate con tu agrupación en segundos. Elegí una opción:",
     });
 
     const adminCard = containerEl.createDiv({ cls: "mi-agrupacion-card" });
-    adminCard.createEl("h4", { text: "Crear agrupación" });
+    new Setting(adminCard).setHeading().setName("Crear agrupación");
     adminCard.createEl("p", {
         text: "Sos el admin de tu agrupación. Creá una nueva y compartí el código con tus auxiliares.",
     });
@@ -36,32 +36,34 @@ export function renderSetupWizard(ctx: SettingsContext, containerEl: HTMLElement
             btn
                 .setButtonText("Crear agrupación")
                 .setCta()
-                .onClick(async () => {
-                    const input = adminCard.querySelector("input");
-                    const name = input?.value?.trim();
-                    if (!name) {
-                        new Notice("Escribí el nombre de la agrupación");
-                        return;
-                    }
-                    btn.setDisabled(true);
-                    const res = await rpcCreateVault(name);
-                    if (res.success && res.vaultId) {
-                        ctx.settings.vaultId = res.vaultId;
-                        ctx.settings.vaultName = name;
-                        ctx.settings.setupMode = "admin";
-                        ctx.settings.sectores = ["General"];
-                        await ctx.saveFn();
-                        new Notice(`Agrupación "${name}" creada`);
-                        ctx.render();
-                    } else {
-                        new Notice(res.error || "Error al crear agrupación");
-                        btn.setDisabled(false);
-                    }
+                .onClick(() => {
+                    void (async () => {
+                        const input = adminCard.querySelector("input");
+                        const name = input?.value?.trim();
+                        if (!name) {
+                            new Notice("Escribí el nombre de la agrupación");
+                            return;
+                        }
+                        btn.setDisabled(true);
+                        const res = await rpcCreateVault(name);
+                        if (res.success && res.vaultId) {
+                            ctx.settings.vaultId = res.vaultId;
+                            ctx.settings.vaultName = name;
+                            ctx.settings.setupMode = "admin";
+                            ctx.settings.sectores = ["General"];
+                            await ctx.saveFn();
+                            new Notice(`Agrupación "${name}" creada`);
+                            ctx.render();
+                        } else {
+                            new Notice(res.error || "Error al crear agrupación");
+                            btn.setDisabled(false);
+                        }
+                    })();
                 })
         );
 
     const auxCard = containerEl.createDiv({ cls: "mi-agrupacion-card" });
-    auxCard.createEl("h4", { text: "Unirse a agrupación" });
+    new Setting(auxCard).setHeading().setName("Unirse a agrupación");
     auxCard.createEl("p", {
         text: "Pegá el código que te compartió tu admin para unirte a una agrupación existente.",
     });
@@ -69,40 +71,42 @@ export function renderSetupWizard(ctx: SettingsContext, containerEl: HTMLElement
         .setName("Código de invitación")
         .addText((t) => {
             t.setPlaceholder("Ej: MA-ABC12345");
-            t.inputEl.style.width = "200px";
+            t.inputEl.addClass("mi-agrupacion-input-md");
         });
     new Setting(auxCard)
         .addButton((btn) =>
             btn
                 .setButtonText("Unirse")
                 .setCta()
-                .onClick(async () => {
-                    const input = auxCard.querySelector("input");
-                    const code = input?.value?.trim();
-                    if (!code) {
-                        new Notice("Pegá el código de invitación");
-                        return;
-                    }
-                    btn.setDisabled(true);
-                    const resolve = await rpcResolveInvitation(code);
-                    if (!resolve.success || !resolve.vaultId) {
-                        new Notice(resolve.error || "Código inválido");
-                        btn.setDisabled(false);
-                        return;
-                    }
-                    const join = await rpcJoinVault(code);
-                    if (join.success) {
-                        ctx.settings.vaultId = resolve.vaultId;
-                        ctx.settings.vaultName = resolve.vaultName || "";
-                        ctx.settings.setupMode = "auxiliar";
-                        ctx.settings.sectores = ["General"];
-                        await ctx.saveFn();
-                        new Notice(`Te uniste a "${resolve.vaultName}"`);
-                        ctx.render();
-                    } else {
-                        new Notice(join.error || "Error al unirse");
-                        btn.setDisabled(false);
-                    }
+                .onClick(() => {
+                    void (async () => {
+                        const input = auxCard.querySelector("input");
+                        const code = input?.value?.trim();
+                        if (!code) {
+                            new Notice("Pegá el código de invitación");
+                            return;
+                        }
+                        btn.setDisabled(true);
+                        const resolve = await rpcResolveInvitation(code);
+                        if (!resolve.success || !resolve.vaultId) {
+                            new Notice(resolve.error || "Código inválido");
+                            btn.setDisabled(false);
+                            return;
+                        }
+                        const join = await rpcJoinVault(code);
+                        if (join.success) {
+                            ctx.settings.vaultId = resolve.vaultId;
+                            ctx.settings.vaultName = resolve.vaultName || "";
+                            ctx.settings.setupMode = "auxiliar";
+                            ctx.settings.sectores = ["General"];
+                            await ctx.saveFn();
+                            new Notice(`Te uniste a "${resolve.vaultName}"`);
+                            ctx.render();
+                        } else {
+                            new Notice(join.error || "Error al unirse");
+                            btn.setDisabled(false);
+                        }
+                    })();
                 })
         );
 }
@@ -123,9 +127,11 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
                 .addOption("5", "5 minutos")
                 .addOption("10", "10 minutos")
                 .setValue(String(ctx.settings.syncInterval))
-                .onChange(async (value) => {
-                    ctx.settings.syncInterval = parseInt(value, 10);
-                    await ctx.saveFn();
+                .onChange((value) => {
+                    void (async () => {
+                        ctx.settings.syncInterval = parseInt(value, 10);
+                        await ctx.saveFn();
+                    })();
                 })
         );
 
@@ -134,13 +140,15 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
         new Setting(containerEl)
             .setName(`Conectado como ${ctx.settings.authEmail}`)
             .addButton((btn) =>
-                btn.setButtonText("Cerrar sesión").onClick(async () => {
-                    ctx.settings.authToken = "";
-                    ctx.settings.authEmail = "";
-                    ctx.settings.authRefreshToken = "";
-                    await ctx.saveFn();
-                    new Notice("Sesión cerrada");
-                    ctx.render();
+                btn.setButtonText("Cerrar sesión").onClick(() => {
+                    void (async () => {
+                        ctx.settings.authToken = "";
+                        ctx.settings.authEmail = "";
+                        ctx.settings.authRefreshToken = "";
+                        await ctx.saveFn();
+                        new Notice("Sesión cerrada");
+                        ctx.render();
+                    })();
                 })
             );
     } else {
@@ -149,10 +157,12 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
             .addButton((btn) =>
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
                     const { LoginModal } = require("../supabase/login-modal");
-                    new LoginModal(ctx.app, async (email: string) => {
-                        ctx.settings.authEmail = email;
-                        await ctx.saveFn();
-                        ctx.render();
+                    new LoginModal(ctx.app, (email: string) => {
+                        void (async () => {
+                            ctx.settings.authEmail = email;
+                            await ctx.saveFn();
+                            ctx.render();
+                        })();
                     }).open();
                 })
             );
@@ -163,13 +173,15 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
         .setName("Cambiar agrupación")
         .setDesc("Desconectate de esta agrupación y unite a otra o creá una nueva")
         .addButton((btn) =>
-            btn.setButtonText("Cambiar modo").setWarning().onClick(async () => {
-                ctx.settings.vaultId = "";
-                ctx.settings.vaultName = "";
-                ctx.settings.setupMode = "";
-                await ctx.saveFn();
-                new Notice("Desconectado. Elegí una nueva agrupación.");
-                ctx.render();
+            btn.setButtonText("Cambiar modo").setWarning().onClick(() => {
+                void (async () => {
+                    ctx.settings.vaultId = "";
+                    ctx.settings.vaultName = "";
+                    ctx.settings.setupMode = "";
+                    await ctx.saveFn();
+                    new Notice("Desconectado. Elegí una nueva agrupación.");
+                    ctx.render();
+                })();
             })
         );
 }

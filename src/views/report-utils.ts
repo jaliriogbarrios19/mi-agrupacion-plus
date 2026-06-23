@@ -52,7 +52,7 @@ export function renderSearchInput(
         placeholder: "Buscar...",
         value,
     });
-    input.setCssStyles({ width: "100%", marginBottom: "8px" });
+    input.addClass("mi-agrupacion-full-width");
     let timer: number | null = null;
     input.addEventListener("input", () => {
         if (timer) window.clearTimeout(timer);
@@ -94,7 +94,7 @@ export function kpi(
     card.createDiv({ cls: "mi-agrupacion-kpi-value", text: value });
     card.createDiv({ cls: "mi-agrupacion-kpi-label", text: label });
     if (onClick) {
-        card.setCssStyles({ cursor: "pointer" });
+        card.addClass("mi-agrupacion-kpi-clickable");
         card.addEventListener("click", onClick);
     }
 }

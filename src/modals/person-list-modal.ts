@@ -19,7 +19,7 @@ export class PersonListModal extends Modal {
             type: "text",
             placeholder: "Buscar...",
         });
-        searchInput.setCssStyles({ width: "100%", marginBottom: "8px" });
+        searchInput.addClass("mi-agrupacion-full-width");
         const listContainer = contentEl.createDiv();
 
         searchInput.addEventListener("input", () => {
@@ -47,10 +47,6 @@ export class PersonListModal extends Modal {
 
         for (const name of filtered) {
             const row = container.createDiv({ cls: "mi-agrupacion-record-row" });
-            row.setCssStyles({
-                padding: "6px",
-                borderBottom: "1px solid var(--background-modifier-border)",
-            });
             row.createSpan({ text: name });
         }
     }

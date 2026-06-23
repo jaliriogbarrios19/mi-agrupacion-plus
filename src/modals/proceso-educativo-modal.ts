@@ -141,7 +141,7 @@ export class ProcesoEducativoModal extends Modal {
             .setName("Lección")
             .addText((t) =>
                 t.setPlaceholder("Nombre o número de lección").onChange(
-                    (v) => (this.leccion = v.trim())
+                    (v) => { this.leccion = v.trim(); }
                 )
             );
 
@@ -149,7 +149,7 @@ export class ProcesoEducativoModal extends Modal {
             .setName("Libro")
             .addText((t) =>
                 t.setPlaceholder("Nombre del libro").onChange(
-                    (v) => (this.libro = v.trim())
+                    (v) => { this.libro = v.trim(); }
                 )
             );
 
@@ -167,7 +167,7 @@ export class ProcesoEducativoModal extends Modal {
             type: "text",
             placeholder: "Nombre del participante",
         });
-        input.setCssStyles({ width: "180px" });
+        input.addClass("mi-agrupacion-input-sm");
         const addBtn = row.createEl("button", { text: "Agregar" });
         this.tagsEl = wrapper.createDiv();
         this.renderChips();
@@ -196,7 +196,7 @@ export class ProcesoEducativoModal extends Modal {
                 text: p,
             });
             const x = chip.createEl("span", { text: " ×" });
-            x.setCssStyles({ cursor: "pointer" });
+            x.addClass("mi-agrupacion-tag-close");
             x.addEventListener("click", () => {
                 this.participantes = this.participantes.filter(
                     (n) => n !== p
@@ -304,8 +304,8 @@ export class ProcesoEducativoModal extends Modal {
 
     private updateConditionalFields(): void {
         const isClaseNinos = this.tipo === "Clase de Niños";
-        this.leccionSetting.settingEl.setCssStyles({ display: isClaseNinos ? "" : "none" });
-        this.libroSetting.settingEl.setCssStyles({ display: isClaseNinos ? "none" : "" });
+        this.leccionSetting.settingEl.toggleClass("mi-agrupacion-hidden", !isClaseNinos);
+        this.libroSetting.settingEl.toggleClass("mi-agrupacion-hidden", isClaseNinos);
     }
 
     private async guardar(): Promise<void> {
