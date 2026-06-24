@@ -129,8 +129,8 @@ export const CONDICIONES = [
     "Simpatizante",
 ];
 
-export const VIEW_TYPE_DASHBOARD = "mi-agrupacion-dashboard";
-export const VIEW_TYPE_GENERAL = "mi-agrupacion-general";
-export const VIEW_TYPE_RESUMEN_SRP = "mi-agrupacion-resumen-srp";
-export const VIEW_TYPE_CAMPANA = "mi-agrupacion-campana";
-export const VIEW_TYPE_REGISTRO_REUNIONES = "mi-agrupacion-registro-reuniones";
+export const VIEW_TYPE_DASHBOARD = "mi-agrupacion-plus-dashboard";
+export const VIEW_TYPE_GENERAL = "mi-agrupacion-plus-general";
+export const VIEW_TYPE_RESUMEN_SRP = "mi-agrupacion-plus-resumen-srp";
+export const VIEW_TYPE_CAMPANA = "mi-agrupacion-plus-campana";
+export const VIEW_TYPE_REGISTRO_REUNIONES = "mi-agrupacion-plus-registro-reuniones";

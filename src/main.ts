@@ -182,18 +182,18 @@ export default class MiAgrupacionPlugin extends Plugin {
     startSync(): void {
         this.stopSync();
         if (!this.settings.vaultId) return;
-        if (isSessionExpired()) { this.syncStatusBar.setText("⚠️ Sesión expirada"); return; }
+        if (isSessionExpired()) { this.syncStatusBar?.setText("⚠️ Sesión expirada"); return; }
         const localSectores = this.settings.sectores.length > 0 ? this.settings.sectores : DEFAULT_SECTORES;
-        this.syncManager = new SyncManager(this.app, this.settings.vaultId, this.settings.vaultName, (text) => { this.syncStatusBar.setText(text); }, [this.settings.carpetaBase], (sectores) => {
+        this.syncManager = new SyncManager(this.app, this.settings.vaultId, this.settings.vaultName, (text) => { this.syncStatusBar?.setText(text); }, [this.settings.carpetaBase], (sectores) => {
             if (JSON.stringify(this.settings.sectores) !== JSON.stringify(sectores)) { this.settings.sectores = sectores; void this.saveSettings(); }
         }, localSectores);
         this.syncManager.start(this.settings.syncInterval);
-        this.syncStatusBar.setText("☁️ Conectado");
+        this.syncStatusBar?.setText("☁️ Conectado");
     }
 
     stopSync(): void {
         if (this.syncManager) { this.syncManager.stop(); this.syncManager = null; }
-        this.syncStatusBar.setText("🏠 Agrupación");
+        this.syncStatusBar?.setText("🏠 Agrupación");
     }
 
     onunload(): void {
