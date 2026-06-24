@@ -1,5 +1,5 @@
 import { type App, Notice } from "obsidian";
-import { restGet, restUpsert, restDelete, isLoggedIn, getVaultSectores, setVaultSectores, getCurrentUser } from "./client";
+import { restGet, restUpsert, restDelete, isLoggedIn, getVaultSectores, setVaultSectores } from "./client";
 import { PullHandler, type SyncState } from "./sync-pull";
 import { PushHandler } from "./sync-push";
 import { ConfirmModal } from "../utils/confirm";

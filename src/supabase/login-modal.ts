@@ -116,7 +116,7 @@ export class LoginModal extends Modal {
                     new Notice(res.error || "Error al iniciar sesión");
                 }
             }
-        } catch (e) {
+        } catch {
             new Notice("Error de conexión. Verificá tu conexión a internet.");
         } finally {
             this.submitting = false;

@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf, Notice, TFolder } from "obsidian";
+import { Plugin, Notice, TFolder } from "obsidian";
 import type { MiAgrupacionSettings } from "./types";
 import { DEFAULT_SETTINGS, DEFAULT_SECTORES, VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA } from "./types";
 import { DataManager } from "./data/manager";
@@ -64,8 +64,8 @@ export default class MiAgrupacionPlugin extends Plugin {
         this.addSettingTab(new MiAgrupacionSettingTab(this.app, this));
 
         // Re-pull on foreground after mobile backgrounding
-        this.registerDomEvent(document, "visibilitychange", () => {
-            if (document.visibilityState === "visible" && isLoggedIn() && !isSessionExpired()) {
+        this.registerDomEvent(activeDocument, "visibilitychange", () => {
+            if (activeDocument.visibilityState === "visible" && isLoggedIn() && !isSessionExpired()) {
                 void this.syncManager?.pullChanges?.();
             }
         });

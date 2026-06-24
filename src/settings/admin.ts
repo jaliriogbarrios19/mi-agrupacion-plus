@@ -1,4 +1,4 @@
-import { Setting, Notice, type App } from "obsidian";
+import { Setting, Notice } from "obsidian";
 import type { SettingsContext } from "./setup-wizard";
 import {
     isLoggedIn,
@@ -76,18 +76,18 @@ function renderInvitation(ctx: SettingsContext, containerEl: HTMLElement): void 
                                         await navigator.clipboard.writeText(res.code!);
                                         new Notice("Código copiado");
                                     } catch {
-                                        const ta = document.createElement("textarea");
+                                        const ta = activeDocument.createElement("textarea");
                                         ta.value = res.code!;
                                         ta.addClass("mi-agrupacion-hidden-textarea");
-                                        document.body.appendChild(ta);
+                                        activeDocument.body.appendChild(ta);
                                         ta.select();
                                         try {
-                                            document.execCommand("copy");
+                                            activeDocument.execCommand("copy");
                                             new Notice("Código copiado");
                                         } catch {
                                             new Notice("No se pudo copiar. Seleccioná el código manualmente.");
                                         }
-                                        document.body.removeChild(ta);
+                                        activeDocument.body.removeChild(ta);
                                     }
                                 })();
                             })

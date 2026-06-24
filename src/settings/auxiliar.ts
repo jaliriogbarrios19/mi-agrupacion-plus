@@ -1,4 +1,4 @@
-import { Setting, Notice, type App } from "obsidian";
+import { Setting, Notice } from "obsidian";
 import type { SettingsContext } from "./setup-wizard";
 import { isLoggedIn, getSession, logout, isSessionExpired } from "../supabase/client";
 import { LoginModal } from "../supabase/login-modal";
@@ -152,8 +152,8 @@ function renderChangeMode(ctx: SettingsContext, containerEl: HTMLElement): void 
         .setName("Cambiar agrupación")
         .setDesc("Desconectate de esta agrupación y unite a otra o creá una nueva")
         .addButton((btn) =>
-            btn.setButtonText("Cambiar modo").setWarning().onClick(() => {
-                new ConfirmModal(
+            btn.setButtonText("Cambiar modo").onClick(() => {
+                void new ConfirmModal(
                     ctx.app,
                     "¿Estás seguro de desconectarte de esta agrupación? Tus datos locales no se perderán, pero perderás la conexión con la nube.",
                 ).show().then((confirmed) => {
