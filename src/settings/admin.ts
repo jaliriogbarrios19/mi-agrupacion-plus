@@ -78,8 +78,7 @@ function renderInvitation(ctx: SettingsContext, containerEl: HTMLElement): void 
                                     } catch {
                                         const ta = document.createElement("textarea");
                                         ta.value = res.code!;
-                                        ta.style.position = "fixed";
-                                        ta.style.opacity = "0";
+                                        ta.addClass("mi-agrupacion-hidden-textarea");
                                         document.body.appendChild(ta);
                                         ta.select();
                                         try {

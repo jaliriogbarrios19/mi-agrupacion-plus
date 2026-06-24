@@ -395,6 +395,12 @@
   display: none;
 }
 
+.mi-agrupacion-hidden-textarea {
+  position: fixed;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .mi-agrupacion-guide-link {
   display: inline-block;
   margin-top: 4px;
