@@ -223,8 +223,16 @@ export async function restGet<T>(table: string, params: Record<string, string>):
 }
 
 export async function restUpsert<T>(table: string, body: T, onConflict: string): Promise<boolean> {
-    const res = await api("POST", `/rest/v1/${table}?on_conflict=${onConflict}`, body, { "Prefer": "resolution=merge-duplicates" });
-    return res.status >= 200 && res.status < 300;
+    try {
+        const res = await api("POST", `/rest/v1/${table}?on_conflict=${onConflict}`, body, { "Prefer": "resolution=merge-duplicates" });
+        if (res.status < 200 || res.status >= 300) {
+            console.warn(`Mi Agrupacion Plus — restUpsert ${table} failed:`, res.status, res.json);
+        }
+        return res.status >= 200 && res.status < 300;
+    } catch (e) {
+        console.warn(`Mi Agrupacion Plus — restUpsert ${table} error:`, e instanceof Error ? e.message : String(e));
+        return false;
+    }
 }
 
 export async function restDelete(table: string, params: Record<string, string>): Promise<boolean> {

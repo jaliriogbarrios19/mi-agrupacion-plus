@@ -53,10 +53,8 @@ export class SyncManager {
     }
 
     start(syncIntervalMinutes: number): void {
-        console.log("Mi Agrupacion Plus — sync.start called, interval:", syncIntervalMinutes);
         this.syncIntervalMs = syncIntervalMinutes * 60 * 1000;
         void this.ensureVault().then((ok) => {
-            console.log("Mi Agrupacion Plus — ensureVault returned:", ok);
             if (!ok) return;
             this.state.vaultReady = true;
             this.pushHandler.registerVaultEvents(() => this.state.vaultReady);
@@ -72,12 +70,10 @@ export class SyncManager {
 
     private async ensureVault(): Promise<boolean> {
         try {
-            console.log("Mi Agrupacion Plus — ensureVault: checking vault", this.vaultId);
             const existing = await restGet<{ id: string }>(
                 "vaults",
                 { id: `eq.${this.vaultId}`, select: "id" }
             );
-            console.log("Mi Agrupacion Plus — ensureVault: found", existing.length, "vaults");
             if (existing.length === 0) {
                 this.onStatusChange("⚠️ Agrupación no encontrada");
                 return false;
