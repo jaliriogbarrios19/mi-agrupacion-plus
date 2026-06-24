@@ -110,6 +110,39 @@ export function renderSetupWizard(ctx: SettingsContext, containerEl: HTMLElement
                     })();
                 })
         );
+
+    const loginCard = containerEl.createDiv({ cls: "mi-agrupacion-card" });
+    new Setting(loginCard)
+        .setName("¿Ya tenés cuenta?")
+        .setDesc("Iniciá sesión para conectarte a tu agrupación existente")
+        .addButton((btn) =>
+            btn
+                .setButtonText("Iniciar sesión")
+                .setCta()
+                .onClick(() => {
+                    void (async () => {
+                        const { LoginModal } = await import("../supabase/login-modal");
+                        const { getSession, findUserVault } = await import("../supabase/client");
+                        new LoginModal(ctx.app, (email: string) => {
+                            void (async () => {
+                                const session = getSession();
+                                ctx.settings.authToken = session.token;
+                                ctx.settings.authEmail = email;
+                                ctx.settings.authRefreshToken = session.refresh;
+                                const vault = await findUserVault();
+                                if (vault) {
+                                    ctx.settings.vaultId = vault.vaultId;
+                                    ctx.settings.vaultName = vault.vaultName;
+                                    ctx.settings.setupMode = vault.role === "admin" ? "admin" : "auxiliar";
+                                    new Notice(`Conectado a "${vault.vaultName}" como ${vault.role}`);
+                                }
+                                await ctx.saveFn();
+                                ctx.render();
+                            })();
+                        }).open();
+                    })();
+                })
+        );
 }
 
 export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLElement): void {
