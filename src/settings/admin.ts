@@ -185,6 +185,7 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
                             }
                             await ctx.saveFn();
                             ctx.render();
+                            if (ctx.settings.vaultId) ctx.plugin.startSync();
                         })();
                     }).open();
                 })
@@ -209,6 +210,7 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
                             }
                             await ctx.saveFn();
                             ctx.render();
+                            if (ctx.settings.vaultId) ctx.plugin.startSync();
                         })();
                     }).open();
                 })

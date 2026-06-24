@@ -8,7 +8,7 @@ import {
 import { ConfirmModal } from "../utils/confirm";
 
 export interface SettingsContext {
-    plugin: { saveSettings: () => Promise<void>; settings: MiAgrupacionSettings };
+    plugin: { saveSettings: () => Promise<void>; settings: MiAgrupacionSettings; startSync: () => void };
     settings: MiAgrupacionSettings;
     saveFn: () => Promise<void>;
     saveAndSyncSectores: () => Promise<void>;
@@ -209,6 +209,9 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
                                 }
                                 await ctx.saveFn();
                                 ctx.render();
+                                if (ctx.settings.vaultId) {
+                                    ctx.plugin.startSync();
+                                }
                             })();
                         }).open();
                     })();
