@@ -1,10 +1,11 @@
-import { App, Setting, Notice } from "obsidian";
+import { App, Modal, Setting, Notice } from "obsidian";
 import type { MiAgrupacionSettings } from "../types";
 import {
     rpcCreateVault,
     rpcResolveInvitation,
     rpcJoinVault,
 } from "../supabase/rpc";
+import { checkUserApproval } from "../supabase/client";
 import { ConfirmModal } from "../utils/confirm";
 
 export interface SettingsContext {
@@ -46,6 +47,14 @@ export function renderSetupWizard(ctx: SettingsContext, containerEl: HTMLElement
                             return;
                         }
                         btn.setDisabled(true);
+
+                        const approved = await checkUserApproval();
+                        if (!approved) {
+                            showAdminPendingApproval(ctx.app);
+                            btn.setDisabled(false);
+                            return;
+                        }
+
                         const res = await rpcCreateVault(name);
                         if (res.success && res.vaultId) {
                             ctx.settings.vaultId = res.vaultId;
@@ -242,4 +251,33 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
                 });
             })
         );
+}
+
+function showAdminPendingApproval(app: App): void {
+    const modal = new Modal(app);
+    modal.contentEl.addClass("mi-agrupacion-modal");
+
+    modal.contentEl.createEl("h3", { text: "Aprobación requerida para crear agrupación" });
+
+    modal.contentEl.createEl("p", {
+        text: "Para crear una agrupación necesitamos verificar que sos parte de la comunidad bahá'í. Los auxiliares no necesitan este paso — solo los administradores.",
+        cls: "mi-agrupacion-stat",
+    });
+
+    const contactCard = modal.contentEl.createDiv({ cls: "mi-agrupacion-card" });
+    contactCard.createEl("p", { text: "Enviá un correo a:" });
+    contactCard.createEl("p", {
+        text: "jaliriogbarrios@gmail.com",
+        cls: "mi-agrupacion-pending-email",
+    });
+    contactCard.createEl("p", {
+        text: "Indicando tu nombre, localidad y comunidad bahá'í a la que pertenecés.",
+    });
+
+    new Setting(modal.contentEl)
+        .addButton((btn) =>
+            btn.setButtonText("Cerrar").onClick(() => { modal.close(); })
+        );
+
+    modal.open();
 }

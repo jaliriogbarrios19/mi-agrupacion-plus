@@ -18,6 +18,7 @@ export class SyncManager {
     private pullHandler: PullHandler;
     private pushHandler: PushHandler;
     private syncing = false;
+    private isAdmin = false;
     public isPulling = false;
 
     constructor(
@@ -27,7 +28,8 @@ export class SyncManager {
         onStatusChange: (text: string) => void,
         syncFolders: string[] = ["Registros"],
         onSectoresUpdate: (sectores: string[]) => void = () => {},
-        defaultSectores: string[] = []
+        defaultSectores: string[] = [],
+        isAdmin = false
     ) {
         this.app = app;
         this.vaultId = vaultId;
@@ -35,6 +37,7 @@ export class SyncManager {
         this.onStatusChange = onStatusChange;
         this.onSectoresUpdate = onSectoresUpdate;
         this.defaultSectores = defaultSectores;
+        this.isAdmin = isAdmin;
         this.state = {
             vaultReady: false,
             lastPullAt: "",
@@ -105,10 +108,12 @@ export class SyncManager {
     async pullChanges(): Promise<number> {
         if (this.syncing) return 0;
         if (!isLoggedIn()) return 0;
-        const approved = await checkApprovalCached();
-        if (!approved) {
-            this.onStatusChange("⚠️ Pendiente de aprobación");
-            return 0;
+        if (this.isAdmin) {
+            const approved = await checkApprovalCached();
+            if (!approved) {
+                this.onStatusChange("⚠️ Pendiente de aprobación");
+                return 0;
+            }
         }
         this.syncing = true;
         this.isPulling = true;
@@ -135,10 +140,12 @@ export class SyncManager {
             new Notice("Iniciá sesión primero para sincronizar");
             return;
         }
-        const approved = await checkApprovalCached();
-        if (!approved) {
-            new Notice("Tu cuenta está pendiente de aprobación.");
-            return;
+        if (this.isAdmin) {
+            const approved = await checkApprovalCached();
+            if (!approved) {
+                new Notice("Tu cuenta está pendiente de aprobación.");
+                return;
+            }
         }
         if (!this.state.vaultReady) {
             const ok = await this.ensureVault();

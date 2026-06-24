@@ -88,14 +88,18 @@ export default class MiAgrupacionPlugin extends Plugin {
             new Notice("Sesión expirada. Iniciá sesión de nuevo en Ajustes → Mi Agrupación.");
         });
         if (isLoggedIn() && !isSessionExpired()) {
-            void (async () => {
-                const approved = await checkApprovalCached();
-                if (approved) {
-                    this.startSync();
-                } else {
-                    this.syncStatusBar?.setText("⚠️ Pendiente de aprobación");
-                }
-            })();
+            if (this.settings.setupMode === "admin") {
+                void (async () => {
+                    const approved = await checkApprovalCached();
+                    if (approved) {
+                        this.startSync();
+                    } else {
+                        this.syncStatusBar?.setText("⚠️ Pendiente de aprobación");
+                    }
+                })();
+            } else {
+                this.startSync();
+            }
         }
 
         this.checkWhatsNew();
@@ -191,9 +195,10 @@ export default class MiAgrupacionPlugin extends Plugin {
         if (!this.settings.vaultId) return;
         if (isSessionExpired()) { this.syncStatusBar?.setText("⚠️ Sesión expirada"); return; }
         const localSectores = this.settings.sectores.length > 0 ? this.settings.sectores : DEFAULT_SECTORES;
+        const isAdmin = this.settings.setupMode === "admin";
         this.syncManager = new SyncManager(this.app, this.settings.vaultId, this.settings.vaultName, (text) => { this.syncStatusBar?.setText(text); }, [this.settings.carpetaBase], (sectores) => {
             if (JSON.stringify(this.settings.sectores) !== JSON.stringify(sectores)) { this.settings.sectores = sectores; void this.saveSettings(); }
-        }, localSectores);
+        }, localSectores, isAdmin);
         this.syncManager.start(this.settings.syncInterval);
         this.syncStatusBar?.setText("☁️ Conectado");
     }
