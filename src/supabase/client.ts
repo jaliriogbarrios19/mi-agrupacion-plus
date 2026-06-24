@@ -171,6 +171,7 @@ export async function login(
     password: string
 ): Promise<{ success: boolean; error?: string }> {
     try {
+        clearSession();
         const res = await api("POST", `/auth/v1/token?grant_type=password`, { email, password });
         console.log("Mi Agrupacion Plus — login:", res.status);
         if (res.status >= 200 && res.status < 300) {

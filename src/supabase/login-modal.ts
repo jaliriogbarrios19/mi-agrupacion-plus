@@ -19,9 +19,15 @@ export class LoginModal extends Modal {
         contentEl.addClass("mi-agrupacion-modal");
 
         contentEl.createEl("h3", {
-            text:
-                this.mode === "login" ? "Iniciar sesión" : "Registrarse",
+            text: this.mode === "login" ? "Iniciar sesión" : "Registrarse",
         });
+
+        if (this.mode === "register") {
+            contentEl.createEl("p", {
+                text: "Creá tu cuenta para sincronizar tus datos con la nube.",
+                cls: "mi-agrupacion-stat",
+            });
+        }
 
         const form = contentEl.createDiv({ cls: "mi-agrupacion-form" });
         let submitBtnRef: HTMLButtonElement | undefined;
@@ -38,7 +44,7 @@ export class LoginModal extends Modal {
         new Setting(form)
             .setName("Contraseña")
             .addText((t) => {
-                t.setPlaceholder("••••••••");
+                t.setPlaceholder("Mínimo 6 caracteres");
                 t.inputEl.type = "password";
                 t.onChange((v) => { this.password = v; });
                 t.inputEl.addEventListener("keydown", (e) => {
@@ -51,14 +57,10 @@ export class LoginModal extends Modal {
         });
 
         const toggleBtn = actions.createEl("button", {
-            text:
-                this.mode === "login"
-                    ? "Crear cuenta"
-                    : "Ya tengo cuenta",
+            text: this.mode === "login" ? "Crear cuenta" : "Ya tengo cuenta",
         });
         toggleBtn.addEventListener("click", () => {
-            this.mode =
-                this.mode === "login" ? "register" : "login";
+            this.mode = this.mode === "login" ? "register" : "login";
             this.onOpen();
         });
 
@@ -68,8 +70,7 @@ export class LoginModal extends Modal {
         cancelBtn.addEventListener("click", () => this.close());
 
         const submitBtn = actions.createEl("button", {
-            text:
-                this.mode === "login" ? "Ingresar" : "Registrarse",
+            text: this.mode === "login" ? "Ingresar" : "Registrarse",
             cls: "mod-cta",
         });
         submitBtnRef = submitBtn;
@@ -99,7 +100,7 @@ export class LoginModal extends Modal {
                         this.onSuccess(this.email);
                         this.close();
                     } else {
-                        new Notice("Cuenta creada. Revisá tu email para confirmar.");
+                        new Notice("Cuenta creada. Revisá tu email para confirmar, luego iniciá sesión.");
                         this.mode = "login";
                         this.onOpen();
                     }
@@ -115,6 +116,8 @@ export class LoginModal extends Modal {
                     new Notice(res.error || "Error al iniciar sesión");
                 }
             }
+        } catch (e) {
+            new Notice("Error de conexión. Verificá tu conexión a internet.");
         } finally {
             this.submitting = false;
             if (submitBtn) submitBtn.disabled = false;
