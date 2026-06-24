@@ -103,6 +103,7 @@ export function renderSetupWizard(ctx: SettingsContext, containerEl: HTMLElement
                             await ctx.saveFn();
                             new Notice(`Te uniste a "${resolve.vaultName}"`);
                             ctx.render();
+                            ctx.plugin.startSync();
                         } else {
                             new Notice(join.error || "Error al unirse");
                             btn.setDisabled(false);
