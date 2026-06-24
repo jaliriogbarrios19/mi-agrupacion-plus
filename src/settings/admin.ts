@@ -176,6 +176,13 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
                             ctx.settings.authToken = session.token;
                             ctx.settings.authEmail = email;
                             ctx.settings.authRefreshToken = session.refresh;
+                            const { findUserVault } = await import("../supabase/client");
+                            const vault = await findUserVault();
+                            if (vault) {
+                                ctx.settings.vaultId = vault.vaultId;
+                                ctx.settings.vaultName = vault.vaultName;
+                                ctx.settings.setupMode = vault.role === "admin" ? "admin" : "auxiliar";
+                            }
                             await ctx.saveFn();
                             ctx.render();
                         })();
@@ -193,6 +200,13 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
                             ctx.settings.authToken = session.token;
                             ctx.settings.authEmail = email;
                             ctx.settings.authRefreshToken = session.refresh;
+                            const { findUserVault } = await import("../supabase/client");
+                            const vault = await findUserVault();
+                            if (vault) {
+                                ctx.settings.vaultId = vault.vaultId;
+                                ctx.settings.vaultName = vault.vaultName;
+                                ctx.settings.setupMode = vault.role === "admin" ? "admin" : "auxiliar";
+                            }
                             await ctx.saveFn();
                             ctx.render();
                         })();

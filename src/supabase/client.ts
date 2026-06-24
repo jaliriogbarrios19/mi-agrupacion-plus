@@ -257,3 +257,16 @@ export async function isVaultAdmin(vaultId: string): Promise<boolean> {
         return rows.length > 0 && rows[0].role === "admin";
     } catch { return false; }
 }
+
+export async function findUserVault(): Promise<{ vaultId: string; vaultName: string; role: string } | null> {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return null;
+        const memberships = await restGet<{ vault_id: string; role: string }>("vault_members", { user_id: `eq.${user.id}`, select: "vault_id,role" });
+        if (memberships.length === 0) return null;
+        const m = memberships[0];
+        const vaults = await restGet<{ id: string; name: string }>("vaults", { id: `eq.${m.vault_id}`, select: "id,name" });
+        if (vaults.length === 0) return null;
+        return { vaultId: vaults[0].id, vaultName: vaults[0].name, role: m.role };
+    } catch { return null; }
+}
