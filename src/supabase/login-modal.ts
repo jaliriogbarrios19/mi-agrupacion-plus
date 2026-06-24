@@ -6,6 +6,7 @@ export class LoginModal extends Modal {
     private mode: "login" | "register" = "login";
     private email = "";
     private password = "";
+    private submitting = false;
 
     constructor(app: App, onSuccess: (email: string) => void) {
         super(app);
@@ -23,14 +24,16 @@ export class LoginModal extends Modal {
         });
 
         const form = contentEl.createDiv({ cls: "mi-agrupacion-form" });
+        let submitBtnRef: HTMLButtonElement | undefined;
 
         new Setting(form)
             .setName("Email")
-            .addText((t) =>
-                t.setPlaceholder("correo@ejemplo.com").onChange(
-                    (v) => { this.email = v.trim(); }
-                )
-            );
+            .addText((t) => {
+                t.setPlaceholder("correo@ejemplo.com");
+                t.inputEl.type = "email";
+                t.inputEl.setAttribute("inputmode", "email");
+                t.onChange((v) => { this.email = v.trim(); });
+            });
 
         new Setting(form)
             .setName("Contraseña")
@@ -39,7 +42,7 @@ export class LoginModal extends Modal {
                 t.inputEl.type = "password";
                 t.onChange((v) => { this.password = v; });
                 t.inputEl.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter") { void this.submit(); }
+                    if (e.key === "Enter") { void this.submit(submitBtnRef); }
                 });
             });
 
@@ -69,38 +72,52 @@ export class LoginModal extends Modal {
                 this.mode === "login" ? "Ingresar" : "Registrarse",
             cls: "mod-cta",
         });
-        submitBtn.addEventListener("click", () => { void this.submit(); });
+        submitBtnRef = submitBtn;
+        submitBtn.addEventListener("click", () => { void this.submit(submitBtn); });
     }
 
-    private async submit(): Promise<void> {
+    private async submit(submitBtn?: HTMLButtonElement): Promise<void> {
+        if (this.submitting) return;
         if (!this.email || !this.password) {
             new Notice("Completá email y contraseña");
             return;
         }
+        if (this.password.length < 6) {
+            new Notice("La contraseña debe tener al menos 6 caracteres");
+            return;
+        }
 
-        if (this.mode === "register") {
-            const res = await signup(this.email, this.password);
-            if (res.success) {
-                if (res.autoConfirmed) {
-                    new Notice("Cuenta creada. Sesión iniciada.");
+        this.submitting = true;
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            if (this.mode === "register") {
+                const res = await signup(this.email, this.password);
+                if (res.success) {
+                    if (res.autoConfirmed) {
+                        new Notice("Cuenta creada. Sesión iniciada.");
+                        this.onSuccess(this.email);
+                        this.close();
+                    } else {
+                        new Notice("Cuenta creada. Revisá tu email para confirmar.");
+                        this.mode = "login";
+                        this.onOpen();
+                    }
+                } else {
+                    new Notice(res.error || "Error al registrar");
+                }
+            } else {
+                const res = await login(this.email, this.password);
+                if (res.success) {
                     this.onSuccess(this.email);
                     this.close();
                 } else {
-                    new Notice("Cuenta creada. Revisá tu email para confirmar.");
-                    this.mode = "login";
-                    this.onOpen();
+                    new Notice(res.error || "Error al iniciar sesión");
                 }
-            } else {
-                new Notice(res.error || "Error al registrar");
             }
-        } else {
-            const res = await login(this.email, this.password);
-            if (res.success) {
-                this.onSuccess(this.email);
-                this.close();
-            } else {
-                new Notice(res.error || "Error al iniciar sesión");
-            }
+        } finally {
+            this.submitting = false;
+            if (submitBtn) submitBtn.disabled = false;
         }
     }
 

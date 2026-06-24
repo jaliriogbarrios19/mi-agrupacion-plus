@@ -4,6 +4,20 @@ import { requestUrl, type RequestUrlParam } from "obsidian";
 export const SUPABASE_URL = "https://dxrhvusvplcotwmxpbov.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4cmh2dXN2cGxjb3R3bXhwYm92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzg5NDUsImV4cCI6MjA5NzgxNDk0NX0.xK5H1f2BRurrU1OEl2rU623pMJKgLCuDRNs1sq3bNiU";
 
+function translateAuthError(error: string): string {
+    const translations: Record<string, string> = {
+        "Invalid login credentials": "Email o contraseña incorrectos",
+        "Email not confirmed": "Email no confirmado. Revisá tu bandeja de entrada",
+        "Password should be at least 6 characters": "La contraseña debe tener al menos 6 caracteres",
+        "A user with this email address has already been registered": "Ya existe una cuenta con este email",
+        "Unable to validate email address: invalid format": "Formato de email inválido",
+    };
+    for (const [en, es] of Object.entries(translations)) {
+        if (error.toLowerCase().includes(en.toLowerCase())) return es;
+    }
+    return error;
+}
+
 let accessToken = "";
 let refreshToken = "";
 let userEmail = "";
@@ -145,9 +159,10 @@ export async function signup(
             return { success: true, autoConfirmed: hasToken };
         }
         const data = res.json as Record<string, unknown>;
-        return { success: false, autoConfirmed: false, error: (data.msg as string) || "Error al registrar" };
-    } catch (e) {
-        return { success: false, autoConfirmed: false, error: String(e) };
+        const raw = (data.msg as string) || "Error al registrar";
+        return { success: false, autoConfirmed: false, error: translateAuthError(raw) };
+    } catch {
+        return { success: false, autoConfirmed: false, error: "Error de conexión. Verificá tu conexión a internet." };
     }
 }
 
@@ -167,10 +182,10 @@ export async function login(
             return { success: true };
         }
         const data = res.json as Record<string, unknown>;
-        const desc = (data.error_description as string) || (data.msg as string) || "Credenciales inválidas";
-        return { success: false, error: desc };
-    } catch (e) {
-        return { success: false, error: String(e) };
+        const raw = (data.error_description as string) || (data.msg as string) || "Credenciales inválidas";
+        return { success: false, error: translateAuthError(raw) };
+    } catch {
+        return { success: false, error: "Error de conexión. Verificá tu conexión a internet." };
     }
 }
 
@@ -201,7 +216,7 @@ export async function restGet<T>(table: string, params: Record<string, string>):
         console.warn(`Mi Agrupacion Plus — restGet ${table}: ${res.status}`);
         return [];
     } catch (e) {
-        console.warn(`Mi Agrupacion Plus — restGet ${table} failed:`, e);
+        console.warn(`Mi Agrupacion Plus — restGet ${table} failed:`, e instanceof Error ? e.message : String(e));
         return [];
     }
 }

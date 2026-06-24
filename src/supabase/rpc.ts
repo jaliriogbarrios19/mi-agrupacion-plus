@@ -7,7 +7,7 @@ export async function rpcCreateVault(name: string): Promise<{ success: boolean; 
             return { success: true, vaultId: res.json as string };
         }
         const data = res.json as Record<string, unknown>;
-        return { success: false, error: (data.message as string) || "Error creating vault" };
+        return { success: false, error: (data.message as string) || "Error al crear la agrupación" };
     } catch (e) {
         return { success: false, error: String(e) };
     }
@@ -20,7 +20,7 @@ export async function rpcGenerateInvitation(vaultId: string): Promise<{ success:
             return { success: true, code: res.json as string };
         }
         const data = res.json as Record<string, unknown>;
-        return { success: false, error: (data.message as string) || "Error generating invitation" };
+        return { success: false, error: (data.message as string) || "Error al generar el código" };
     } catch (e) {
         return { success: false, error: String(e) };
     }
@@ -37,7 +37,7 @@ export async function rpcResolveInvitation(code: string): Promise<{ success: boo
             return { success: false, error: "Código de invitación inválido o expirado" };
         }
         const data = res.json as Record<string, unknown>;
-        return { success: false, error: (data.message as string) || "Error resolving invitation" };
+        return { success: false, error: (data.message as string) || "Error al resolver el código de invitación" };
     } catch (e) {
         return { success: false, error: String(e) };
     }
@@ -50,7 +50,7 @@ export async function rpcJoinVault(code: string): Promise<{ success: boolean; er
             return { success: true };
         }
         const data = res.json as Record<string, unknown>;
-        return { success: false, error: (data.message as string) || "Error joining vault" };
+        return { success: false, error: (data.message as string) || "Error al unirse a la agrupación" };
     } catch (e) {
         return { success: false, error: String(e) };
     }

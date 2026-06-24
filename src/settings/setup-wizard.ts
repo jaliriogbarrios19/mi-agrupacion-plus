@@ -5,6 +5,7 @@ import {
     rpcResolveInvitation,
     rpcJoinVault,
 } from "../supabase/rpc";
+import { ConfirmModal } from "../utils/confirm";
 
 export interface SettingsContext {
     plugin: { saveSettings: () => Promise<void>; settings: MiAgrupacionSettings };
@@ -81,9 +82,9 @@ export function renderSetupWizard(ctx: SettingsContext, containerEl: HTMLElement
                 .onClick(() => {
                     void (async () => {
                         const input = auxCard.querySelector("input");
-                        const code = input?.value?.trim();
-                        if (!code) {
-                            new Notice("Pegá el código de invitación");
+                        const code = input?.value?.trim().replace(/[\u200B\uFEFF\u00A0\r\n]/g, '').toUpperCase();
+                        if (!code || !/^MA-[A-Z0-9]{8}$/.test(code)) {
+                            new Notice("Código inválido. Debe tener formato MA-XXXXXXXX");
                             return;
                         }
                         btn.setDisabled(true);
@@ -156,14 +157,20 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
             .setName("Iniciá sesión para sincronizar")
             .addButton((btn) =>
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
-                    const { LoginModal } = require("../supabase/login-modal");
-                    new LoginModal(ctx.app, (email: string) => {
-                        void (async () => {
-                            ctx.settings.authEmail = email;
-                            await ctx.saveFn();
-                            ctx.render();
-                        })();
-                    }).open();
+                    void (async () => {
+                        const { LoginModal } = await import("../supabase/login-modal");
+                        const { getSession } = await import("../supabase/client");
+                        new LoginModal(ctx.app, (email: string) => {
+                            void (async () => {
+                                const session = getSession();
+                                ctx.settings.authToken = session.token;
+                                ctx.settings.authEmail = email;
+                                ctx.settings.authRefreshToken = session.refresh;
+                                await ctx.saveFn();
+                                ctx.render();
+                            })();
+                        }).open();
+                    })();
                 })
             );
     }
@@ -174,14 +181,20 @@ export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLEleme
         .setDesc("Desconectate de esta agrupación y unite a otra o creá una nueva")
         .addButton((btn) =>
             btn.setButtonText("Cambiar modo").setWarning().onClick(() => {
-                void (async () => {
-                    ctx.settings.vaultId = "";
-                    ctx.settings.vaultName = "";
-                    ctx.settings.setupMode = "";
-                    await ctx.saveFn();
-                    new Notice("Desconectado. Elegí una nueva agrupación.");
-                    ctx.render();
-                })();
+                new ConfirmModal(
+                    ctx.app,
+                    "¿Estás seguro de desconectarte de esta agrupación? Tus datos locales no se perderán, pero perderás la conexión con la nube.",
+                ).show().then((confirmed) => {
+                    if (!confirmed) return;
+                    void (async () => {
+                        ctx.settings.vaultId = "";
+                        ctx.settings.vaultName = "";
+                        ctx.settings.setupMode = "";
+                        await ctx.saveFn();
+                        new Notice("Desconectado. Elegí una nueva agrupación.");
+                        ctx.render();
+                    })();
+                });
             })
         );
 }

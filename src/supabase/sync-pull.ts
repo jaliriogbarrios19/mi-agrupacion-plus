@@ -1,5 +1,6 @@
 import { type App, normalizePath, TFile, TFolder, Notice } from "obsidian";
 import { restGet, isLoggedIn, getVaultSectores } from "./client";
+import type { PushHandler } from "./sync-push";
 
 interface RemoteNote {
     id: string;
@@ -23,6 +24,7 @@ export class PullHandler {
     private onStatusChange: (text: string) => void;
     private onSectoresUpdate: (sectores: string[]) => void;
     private ensureVault: () => Promise<boolean>;
+    private pushHandler: PushHandler | null = null;
     state: SyncState;
 
     constructor(
@@ -47,6 +49,10 @@ export class PullHandler {
         };
     }
 
+    setPushHandler(pushHandler: PushHandler): void {
+        this.pushHandler = pushHandler;
+    }
+
     async pullChanges(): Promise<number> {
         if (!isLoggedIn()) return 0;
         if (!this.state.vaultReady) {
@@ -55,7 +61,7 @@ export class PullHandler {
                 if (!isLoggedIn()) {
                     new Notice("Sesión expirada. Cerrá sesión y volvé a iniciar.");
                 } else {
-                    new Notice("No se pudo conectar con Supabase. Revisá la URL y API key.");
+                    new Notice("No se pudo conectar al servidor. Intentá de nuevo más tarde.");
                 }
                 this.onStatusChange("⚠️ Error de conexión");
                 return 0;
@@ -100,6 +106,7 @@ export class PullHandler {
                 } else if (file instanceof TFile) {
                     const localContent = await this.app.vault.cachedRead(file);
                     if (localContent !== note.content) {
+                        if (this.pushHandler) this.pushHandler.skipPaths.add(note.path);
                         await this.app.vault.modify(file, note.content);
                     }
                 } else {
@@ -111,6 +118,7 @@ export class PullHandler {
                             // ok
                         }
                     }
+                    if (this.pushHandler) this.pushHandler.skipPaths.add(note.path);
                     await this.app.vault.create(note.path, note.content);
                 }
             }

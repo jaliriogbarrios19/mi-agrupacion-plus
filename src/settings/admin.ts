@@ -71,8 +71,26 @@ function renderInvitation(ctx: SettingsContext, containerEl: HTMLElement): void 
                         codeDisplay.createEl("code", { text: res.code }).addClass("mi-agrupacion-code-display-bold");
                         new Setting(codeDiv).addButton((copyBtn) =>
                             copyBtn.setButtonText("Copiar").onClick(() => {
-                                void navigator.clipboard.writeText(res.code!);
-                                new Notice("Código copiado");
+                                void (async () => {
+                                    try {
+                                        await navigator.clipboard.writeText(res.code!);
+                                        new Notice("Código copiado");
+                                    } catch {
+                                        const ta = document.createElement("textarea");
+                                        ta.value = res.code!;
+                                        ta.style.position = "fixed";
+                                        ta.style.opacity = "0";
+                                        document.body.appendChild(ta);
+                                        ta.select();
+                                        try {
+                                            document.execCommand("copy");
+                                            new Notice("Código copiado");
+                                        } catch {
+                                            new Notice("No se pudo copiar. Seleccioná el código manualmente.");
+                                        }
+                                        document.body.removeChild(ta);
+                                    }
+                                })();
                             })
                         );
                     } else {
@@ -110,7 +128,18 @@ function renderSyncSettings(ctx: SettingsContext, containerEl: HTMLElement): voi
             .setName("Sincronizar ahora")
             .addButton((btn) =>
                 btn.setButtonText("Subir y bajar").setCta().onClick(() => {
-                    new Notice("Sync iniciada...");
+                    void (async () => {
+                        btn.setDisabled(true);
+                        try {
+                            const plugin = ctx.plugin as unknown as { startSync?: () => void; stopSync?: () => void };
+                            plugin.stopSync?.();
+                            plugin.startSync?.();
+                            new Notice("Sincronización iniciada");
+                        } catch {
+                            new Notice("Error al sincronizar");
+                        }
+                        btn.setDisabled(false);
+                    })();
                 })
             );
     }
@@ -143,7 +172,10 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
                     new LoginModal(ctx.app, (email) => {
                         void (async () => {
+                            const session = getSession();
+                            ctx.settings.authToken = session.token;
                             ctx.settings.authEmail = email;
+                            ctx.settings.authRefreshToken = session.refresh;
                             await ctx.saveFn();
                             ctx.render();
                         })();
@@ -157,7 +189,10 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
                 btn.setButtonText("Iniciar sesión").setCta().onClick(() => {
                     new LoginModal(ctx.app, (email) => {
                         void (async () => {
+                            const session = getSession();
+                            ctx.settings.authToken = session.token;
                             ctx.settings.authEmail = email;
+                            ctx.settings.authRefreshToken = session.refresh;
                             await ctx.saveFn();
                             ctx.render();
                         })();

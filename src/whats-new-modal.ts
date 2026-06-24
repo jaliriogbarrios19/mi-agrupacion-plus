@@ -13,7 +13,7 @@ export class WhatsNewModal extends Modal {
     onOpen(): void {
         const { contentEl } = this;
         contentEl.empty();
-        contentEl.addClass("supsync-whats-new");
+        contentEl.addClass("mi-agrupacion-whats-new");
 
         const newEntries = this.getNewEntries();
         if (newEntries.length === 0) {
@@ -24,20 +24,20 @@ export class WhatsNewModal extends Modal {
         contentEl.createEl("h2", { text: "Novedades" });
         contentEl.createEl("p", {
             text: `Versión ${CHANGELOG[0].version}`,
-            cls: "supsync-whats-new-subtitle",
+            cls: "mi-agrupacion-whats-new-subtitle",
         });
 
         for (const entry of newEntries) {
-            const section = contentEl.createDiv("supsync-whats-new-version");
-            const header = section.createDiv("supsync-whats-new-header");
-            header.createEl("span", { text: `v${entry.version}`, cls: "supsync-whats-new-version-tag" });
-            header.createEl("span", { text: entry.date, cls: "supsync-whats-new-date" });
+            const section = contentEl.createDiv("mi-agrupacion-whats-new-version");
+            const header = section.createDiv("mi-agrupacion-whats-new-header");
+            header.createEl("span", { text: `v${entry.version}`, cls: "mi-agrupacion-whats-new-version-tag" });
+            header.createEl("span", { text: entry.date, cls: "mi-agrupacion-whats-new-date" });
 
             const list = section.createEl("ul");
             for (const change of entry.changes) {
                 const li = list.createEl("li");
                 const badge = li.createSpan({
-                    cls: `supsync-whats-new-badge supsync-badge-${change.type}`,
+                    cls: `mi-agrupacion-whats-new-badge mi-agrupacion-badge-${change.type}`,
                 });
                 const labels: Record<string, string> = { feature: "Nuevo", fix: "Fix", improvement: "Mejora" };
                 badge.textContent = labels[change.type] || change.type;

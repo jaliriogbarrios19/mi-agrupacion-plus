@@ -2,10 +2,13 @@ import { type App, Notice } from "obsidian";
 import { restGet, restUpsert, restDelete, isLoggedIn, getVaultSectores, setVaultSectores, getCurrentUser } from "./client";
 import { PullHandler, type SyncState } from "./sync-pull";
 import { PushHandler } from "./sync-push";
+import { ConfirmModal } from "../utils/confirm";
+import { PromptModal } from "../utils/prompt-modal";
 
 export class SyncManager {
     private app: App;
     private vaultId: string;
+    private vaultName: string;
     private pullInterval: number | null = null;
     private syncIntervalMs = 0;
     private onStatusChange: (text: string) => void;
@@ -14,10 +17,13 @@ export class SyncManager {
     private state: SyncState;
     private pullHandler: PullHandler;
     private pushHandler: PushHandler;
+    private syncing = false;
+    public isPulling = false;
 
     constructor(
         app: App,
         vaultId: string,
+        vaultName: string,
         onStatusChange: (text: string) => void,
         syncFolders: string[] = ["Registros"],
         onSectoresUpdate: (sectores: string[]) => void = () => {},
@@ -25,6 +31,7 @@ export class SyncManager {
     ) {
         this.app = app;
         this.vaultId = vaultId;
+        this.vaultName = vaultName;
         this.onStatusChange = onStatusChange;
         this.onSectoresUpdate = onSectoresUpdate;
         this.defaultSectores = defaultSectores;
@@ -42,6 +49,7 @@ export class SyncManager {
         this.pushHandler = new PushHandler(
             app, vaultId, syncFolders, onStatusChange
         );
+        this.pullHandler.setPushHandler(this.pushHandler);
     }
 
     start(syncIntervalMinutes: number): void {
@@ -81,7 +89,7 @@ export class SyncManager {
             }
             return true;
         } catch (e) {
-            console.error("Mi Agrupacion — ensureVault failed:", e);
+            console.error("Mi Agrupacion Plus — ensureVault failed:", e instanceof Error ? e.message : String(e));
             this.onStatusChange("⚠️ Error de conexión");
             return false;
         }
@@ -95,10 +103,28 @@ export class SyncManager {
     }
 
     async pullChanges(): Promise<number> {
-        return this.pullHandler.pullChanges();
+        if (this.syncing) return 0;
+        this.syncing = true;
+        this.isPulling = true;
+        try {
+            return await this.pullHandler.pullChanges();
+        } finally {
+            this.isPulling = false;
+            this.syncing = false;
+        }
     }
 
     async pushNow(): Promise<void> {
+        if (this.syncing) return;
+        this.syncing = true;
+        try {
+            await this._pushNow();
+        } finally {
+            this.syncing = false;
+        }
+    }
+
+    private async _pushNow(): Promise<void> {
         if (!isLoggedIn()) {
             new Notice("Iniciá sesión primero para sincronizar");
             return;
@@ -109,7 +135,7 @@ export class SyncManager {
                 if (!isLoggedIn()) {
                     new Notice("Sesión expirada. Cerrá sesión y volvé a iniciar.");
                 } else {
-                    new Notice("No se pudo conectar con Supabase. Revisá la URL y API key.");
+                    new Notice("No se pudo conectar al servidor. Intentá de nuevo más tarde.");
                 }
                 this.onStatusChange("⚠️ Error de conexión");
                 return;
@@ -144,6 +170,9 @@ export class SyncManager {
             } catch {
                 skipped++;
             }
+            if (pushed % 10 === 0 && pushed > 0) {
+                this.onStatusChange(`↑ ${pushed}/${files.length}`);
+            }
         }
         const pulled = await this.pullChanges();
         new Notice(`Sync: ↑${pushed} enviados, ↓${pulled} recibidos, ${skipped} errores`);
@@ -154,6 +183,27 @@ export class SyncManager {
             new Notice("Iniciá sesión primero");
             return;
         }
+        // First confirmation: generic warning
+        const confirmed = await new ConfirmModal(
+            this.app,
+            "⚠️ Esto va a BORRAR todos los registros remotos de tu agrupación y volver a subir todo desde cero.\n\n¿Estás seguro?",
+            "Cancelar",
+            "Sí, borrar todo"
+        ).show();
+        if (!confirmed) return;
+
+        // Second confirmation: type the vault name
+        const prompt = new PromptModal(
+            this.app,
+            `Para confirmar, escribí el nombre exacto de tu agrupación: "${this.vaultName}"`,
+            this.vaultName
+        );
+        const typed = await prompt.prompt();
+        if (typed !== this.vaultName) {
+            new Notice("Nombre incorrecto. Operación cancelada.");
+            return;
+        }
+
         if (!this.state.vaultReady) {
             const ok = await this.ensureVault();
             if (!ok) { new Notice("No se pudo conectar con Supabase"); return; }

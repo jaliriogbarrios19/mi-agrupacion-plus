@@ -3,8 +3,8 @@
 /* Modal base */
 .mi-agrupacion-modal {
   padding: 16px;
-  min-width: 420px;
-  max-width: 560px;
+  min-width: min(420px, 90vw);
+  max-width: min(560px, 95vw);
 }
 
 .mi-agrupacion-modal h3 {
@@ -443,10 +443,12 @@
 
 .mi-agrupacion-input-sm {
   width: 180px;
+  max-width: 100%;
 }
 
 .mi-agrupacion-input-md {
   width: 200px;
+  max-width: 100%;
 }
 
 .mi-agrupacion-preview-box {
@@ -469,6 +471,11 @@
 
 .mi-agrupacion-kpi-clickable {
   cursor: pointer;
+}
+
+.mi-agrupacion-kpi-clickable:hover {
+  background-color: var(--background-modifier-hover);
+  border-radius: 4px;
 }
 
 .mi-agrupacion-code-display-bold {

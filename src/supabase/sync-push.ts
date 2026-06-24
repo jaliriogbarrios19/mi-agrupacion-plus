@@ -9,6 +9,11 @@ export class PushHandler {
     private pushQueue: Set<string> = new Set();
     private debounceTimer: number | null = null;
     private vaultReadyCheck: () => boolean = () => false;
+    public skipPaths = new Set<string>();
+    private pendingDeletes: Array<{ path: string; retryCount: number }> = [];
+    private deleteRetryTimer: number | null = null;
+    private static readonly MAX_DELETE_RETRIES = 3;
+    private static readonly DELETE_RETRY_DELAY_MS = 5000;
 
     constructor(
         app: App,
@@ -41,6 +46,10 @@ export class PushHandler {
         this.app.vault.on("modify", (file) => {
             if (!(file instanceof TFile)) return;
             if (this.isExcluded(file.path)) return;
+            if (this.skipPaths.has(file.path)) {
+                this.skipPaths.delete(file.path);
+                return;
+            }
             this.enqueue(file.path);
         });
 
@@ -48,10 +57,17 @@ export class PushHandler {
             if (!(file instanceof TFile)) return;
             const path = file.path;
             if (this.isExcluded(path)) return;
-            void restDelete("notes", {
-                vault_id: `eq.${this.vaultId}`,
-                path: `eq.${path}`,
-            });
+            void (async () => {
+                try {
+                    await restDelete("notes", {
+                        vault_id: `eq.${this.vaultId}`,
+                        path: `eq.${path}`,
+                    });
+                } catch {
+                    this.pendingDeletes.push({ path, retryCount: 0 });
+                    this.scheduleDeleteRetry();
+                }
+            })();
         });
     }
 
@@ -88,6 +104,10 @@ export class PushHandler {
             if (!(file instanceof TFile)) continue;
             try {
                 const content = await this.app.vault.cachedRead(file);
+                if (content.length > 1_000_000) {
+                    console.warn(`Mi Agrupacion Plus — skipping ${file.path}: too large (${content.length} bytes)`);
+                    continue;
+                }
                 await restUpsert(
                     "notes",
                     {
@@ -103,5 +123,37 @@ export class PushHandler {
             }
         }
         this.onStatusChange("☁️ Conectado");
+    }
+
+    private scheduleDeleteRetry(): void {
+        if (this.deleteRetryTimer) return;
+        this.deleteRetryTimer = window.setTimeout(
+            () => { void this.flushDeleteRetry(); },
+            PushHandler.DELETE_RETRY_DELAY_MS
+        );
+    }
+
+    private async flushDeleteRetry(): Promise<void> {
+        this.deleteRetryTimer = null;
+        if (this.pendingDeletes.length === 0) return;
+        const batch = [...this.pendingDeletes];
+        this.pendingDeletes = [];
+
+        for (const item of batch) {
+            try {
+                await restDelete("notes", {
+                    vault_id: `eq.${this.vaultId}`,
+                    path: `eq.${item.path}`,
+                });
+            } catch {
+                if (item.retryCount < PushHandler.MAX_DELETE_RETRIES) {
+                    this.pendingDeletes.push({ path: item.path, retryCount: item.retryCount + 1 });
+                }
+            }
+        }
+
+        if (this.pendingDeletes.length > 0) {
+            this.scheduleDeleteRetry();
+        }
     }
 }

@@ -63,6 +63,13 @@ export default class MiAgrupacionPlugin extends Plugin {
 
         this.addSettingTab(new MiAgrupacionSettingTab(this.app, this));
 
+        // Re-pull on foreground after mobile backgrounding
+        this.registerDomEvent(document, "visibilitychange", () => {
+            if (document.visibilityState === "visible" && isLoggedIn() && !isSessionExpired()) {
+                void this.syncManager?.pullChanges?.();
+            }
+        });
+
         // Supabase init
         if (this.settings.authToken) {
             setSession(this.settings.authToken, this.settings.authEmail, this.settings.authRefreshToken);
@@ -177,7 +184,7 @@ export default class MiAgrupacionPlugin extends Plugin {
         if (!this.settings.vaultId) return;
         if (isSessionExpired()) { this.syncStatusBar.setText("⚠️ Sesión expirada"); return; }
         const localSectores = this.settings.sectores.length > 0 ? this.settings.sectores : DEFAULT_SECTORES;
-        this.syncManager = new SyncManager(this.app, this.settings.vaultId, (text) => { this.syncStatusBar.setText(text); }, [this.settings.carpetaBase], (sectores) => {
+        this.syncManager = new SyncManager(this.app, this.settings.vaultId, this.settings.vaultName, (text) => { this.syncStatusBar.setText(text); }, [this.settings.carpetaBase], (sectores) => {
             if (JSON.stringify(this.settings.sectores) !== JSON.stringify(sectores)) { this.settings.sectores = sectores; void this.saveSettings(); }
         }, localSectores);
         this.syncManager.start(this.settings.syncInterval);

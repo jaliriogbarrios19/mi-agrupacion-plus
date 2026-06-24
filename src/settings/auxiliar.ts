@@ -2,6 +2,7 @@ import { Setting, Notice, type App } from "obsidian";
 import type { SettingsContext } from "./setup-wizard";
 import { isLoggedIn, getSession, logout, isSessionExpired } from "../supabase/client";
 import { LoginModal } from "../supabase/login-modal";
+import { ConfirmModal } from "../utils/confirm";
 
 export function renderAuxiliarPanel(ctx: SettingsContext, containerEl: HTMLElement): void {
     // ── Agrupación header ──
@@ -51,7 +52,18 @@ function renderSyncSettings(ctx: SettingsContext, containerEl: HTMLElement): voi
             .setName("Sincronizar ahora")
             .addButton((btn) =>
                 btn.setButtonText("Sincronizar").setCta().onClick(() => {
-                    new Notice("Sync iniciada...");
+                    void (async () => {
+                        btn.setDisabled(true);
+                        try {
+                            const plugin = ctx.plugin as unknown as { startSync?: () => void; stopSync?: () => void };
+                            plugin.stopSync?.();
+                            plugin.startSync?.();
+                            new Notice("Sincronización iniciada");
+                        } catch {
+                            new Notice("Error al sincronizar");
+                        }
+                        btn.setDisabled(false);
+                    })();
                 })
             );
     }
@@ -122,14 +134,20 @@ function renderChangeMode(ctx: SettingsContext, containerEl: HTMLElement): void 
         .setDesc("Desconectate de esta agrupación y unite a otra o creá una nueva")
         .addButton((btn) =>
             btn.setButtonText("Cambiar modo").setWarning().onClick(() => {
-                void (async () => {
-                    ctx.settings.vaultId = "";
-                    ctx.settings.vaultName = "";
-                    ctx.settings.setupMode = "";
-                    await ctx.saveFn();
-                    new Notice("Desconectado. Elegí una nueva agrupación.");
-                    ctx.render();
-                })();
+                new ConfirmModal(
+                    ctx.app,
+                    "¿Estás seguro de desconectarte de esta agrupación? Tus datos locales no se perderán, pero perderás la conexión con la nube.",
+                ).show().then((confirmed) => {
+                    if (!confirmed) return;
+                    void (async () => {
+                        ctx.settings.vaultId = "";
+                        ctx.settings.vaultName = "";
+                        ctx.settings.setupMode = "";
+                        await ctx.saveFn();
+                        new Notice("Desconectado. Elegí una nueva agrupación.");
+                        ctx.render();
+                    })();
+                });
             })
         );
 }
