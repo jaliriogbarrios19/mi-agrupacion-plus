@@ -1,5 +1,5 @@
 import { type App, Notice } from "obsidian";
-import { restGet, restUpsert, restDelete, isLoggedIn, getVaultSectores, setVaultSectores } from "./client";
+import { restGet, restUpsert, restDelete, isLoggedIn, getVaultSectores, setVaultSectores, checkApprovalCached } from "./client";
 import { PullHandler, type SyncState } from "./sync-pull";
 import { PushHandler } from "./sync-push";
 import { ConfirmModal } from "../utils/confirm";
@@ -104,6 +104,12 @@ export class SyncManager {
 
     async pullChanges(): Promise<number> {
         if (this.syncing) return 0;
+        if (!isLoggedIn()) return 0;
+        const approved = await checkApprovalCached();
+        if (!approved) {
+            this.onStatusChange("⚠️ Pendiente de aprobación");
+            return 0;
+        }
         this.syncing = true;
         this.isPulling = true;
         try {
@@ -127,6 +133,11 @@ export class SyncManager {
     private async _pushNow(): Promise<void> {
         if (!isLoggedIn()) {
             new Notice("Iniciá sesión primero para sincronizar");
+            return;
+        }
+        const approved = await checkApprovalCached();
+        if (!approved) {
+            new Notice("Tu cuenta está pendiente de aprobación.");
             return;
         }
         if (!this.state.vaultReady) {

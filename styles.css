@@ -488,3 +488,27 @@
   font-size: 18px;
   font-weight: bold;
 }
+
+/* Pending Approval */
+.mi-agrupacion-pending-email {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--text-accent);
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: var(--background-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.mi-agrupacion-pending-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mi-agrupacion-pending-user-row:last-child {
+  border-bottom: none;
+}

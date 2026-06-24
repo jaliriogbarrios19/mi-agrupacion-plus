@@ -5,8 +5,9 @@ import {
     getSession,
     logout,
     isSessionExpired,
+    isVaultAdmin,
 } from "../supabase/client";
-import { rpcGenerateInvitation } from "../supabase/rpc";
+import { rpcGenerateInvitation, rpcGetPendingUsers, rpcApproveUser } from "../supabase/rpc";
 import { LoginModal } from "../supabase/login-modal";
 
 export function renderAdminPanel(ctx: SettingsContext, containerEl: HTMLElement): void {
@@ -30,6 +31,7 @@ export function renderAdminPanel(ctx: SettingsContext, containerEl: HTMLElement)
     renderInvitation(ctx, containerEl);
     renderSyncSettings(ctx, containerEl);
     renderSession(ctx, containerEl);
+    renderPendingUsers(ctx, containerEl);
     renderFooter(containerEl);
 }
 
@@ -218,6 +220,56 @@ function renderSession(ctx: SettingsContext, containerEl: HTMLElement): void {
                 })
             );
     }
+}
+
+function renderPendingUsers(ctx: SettingsContext, containerEl: HTMLElement): void {
+    if (!isLoggedIn() || !ctx.settings.vaultId) return;
+
+    const section = containerEl.createDiv();
+    new Setting(section).setHeading().setName("Usuarios pendientes de aprobación");
+
+    const listContainer = section.createDiv({ cls: "mi-agrupacion-card" });
+    listContainer.createEl("p", { text: "Cargando..." });
+
+    void (async () => {
+        const isAdmin = await isVaultAdmin(ctx.settings.vaultId);
+        if (!isAdmin) {
+            section.remove();
+            return;
+        }
+
+        const pending = await rpcGetPendingUsers();
+        listContainer.empty();
+
+        if (pending.length === 0) {
+            listContainer.createEl("p", { text: "No hay usuarios pendientes.", cls: "mi-agrupacion-stat" });
+            return;
+        }
+
+        for (const user of pending) {
+            const row = listContainer.createDiv({ cls: "mi-agrupacion-pending-user-row" });
+            const info = row.createDiv();
+            info.createEl("span", { text: user.email });
+            const date = new Date(user.created_at).toLocaleDateString("es-AR");
+            info.createEl("span", { text: ` — registrado el ${date}`, cls: "mi-agrupacion-stat" });
+
+            const approveBtn = row.createEl("button", { text: "Aprobar" });
+            approveBtn.addClass("mod-cta");
+            approveBtn.addEventListener("click", () => {
+                void (async () => {
+                    approveBtn.disabled = true;
+                    const res = await rpcApproveUser(user.user_id);
+                    if (res.success) {
+                        new Notice(`${user.email} aprobado`);
+                        row.remove();
+                    } else {
+                        new Notice(res.error || "Error al aprobar");
+                        approveBtn.disabled = false;
+                    }
+                })();
+            });
+        }
+    })();
 }
 
 function renderFooter(containerEl: HTMLElement): void {

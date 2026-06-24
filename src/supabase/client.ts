@@ -279,3 +279,30 @@ export async function findUserVault(): Promise<{ vaultId: string; vaultName: str
         return { vaultId: vaults[0].id, vaultName: vaults[0].name, role: m.role };
     } catch { return null; }
 }
+
+let approvalCache: { approved: boolean; checkedAt: number } | null = null;
+const APPROVAL_CACHE_TTL_MS = 30 * 60_000;
+
+export async function checkUserApproval(): Promise<boolean> {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return false;
+        const rows = await restGet<{ approved: boolean }>("profiles", { user_id: `eq.${user.id}`, select: "approved" });
+        const approved = rows.length > 0 && rows[0].approved;
+        approvalCache = { approved, checkedAt: Date.now() };
+        return approved;
+    } catch {
+        return approvalCache?.approved ?? false;
+    }
+}
+
+export async function checkApprovalCached(): Promise<boolean> {
+    if (approvalCache && Date.now() - approvalCache.checkedAt < APPROVAL_CACHE_TTL_MS) {
+        return approvalCache.approved;
+    }
+    return checkUserApproval();
+}
+
+export function invalidateApprovalCache(): void {
+    approvalCache = null;
+}

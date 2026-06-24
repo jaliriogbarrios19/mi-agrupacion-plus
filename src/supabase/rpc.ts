@@ -55,3 +55,36 @@ export async function rpcJoinVault(code: string): Promise<{ success: boolean; er
         return { success: false, error: String(e) };
     }
 }
+
+export async function rpcCheckApproval(userId: string): Promise<boolean> {
+    try {
+        const res = await api("POST", "/rest/v1/rpc/check_user_approval", { p_user_id: userId });
+        if (res.status >= 200 && res.status < 300) {
+            return res.json as boolean;
+        }
+    } catch { /* ignore */ }
+    return false;
+}
+
+export async function rpcApproveUser(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const res = await api("POST", "/rest/v1/rpc/approve_user", { p_user_id: userId });
+        if (res.status >= 200 && res.status < 300) {
+            return { success: true };
+        }
+        const data = res.json as Record<string, unknown>;
+        return { success: false, error: (data.message as string) || "Error al aprobar usuario" };
+    } catch (e) {
+        return { success: false, error: String(e) };
+    }
+}
+
+export async function rpcGetPendingUsers(): Promise<Array<{ user_id: string; email: string; created_at: string }>> {
+    try {
+        const res = await api("POST", "/rest/v1/rpc/get_pending_users", {});
+        if (res.status >= 200 && res.status < 300) {
+            return (res.json as Array<{ user_id: string; email: string; created_at: string }>) || [];
+        }
+    } catch { /* ignore */ }
+    return [];
+}

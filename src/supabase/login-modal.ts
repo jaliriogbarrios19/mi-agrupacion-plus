@@ -1,5 +1,5 @@
 import { App, Modal, Setting, Notice } from "obsidian";
-import { login, signup } from "./client";
+import { login, signup, logout, checkUserApproval, invalidateApprovalCache } from "./client";
 
 export class LoginModal extends Modal {
     private onSuccess: (email: string) => void;
@@ -96,6 +96,13 @@ export class LoginModal extends Modal {
                 const res = await signup(this.email, this.password);
                 if (res.success) {
                     if (res.autoConfirmed) {
+                        invalidateApprovalCache();
+                        const approved = await checkUserApproval();
+                        if (!approved) {
+                            await logout();
+                            this.showPendingApproval();
+                            return;
+                        }
                         new Notice("Cuenta creada. Sesión iniciada.");
                         this.onSuccess(this.email);
                         this.close();
@@ -110,6 +117,13 @@ export class LoginModal extends Modal {
             } else {
                 const res = await login(this.email, this.password);
                 if (res.success) {
+                    invalidateApprovalCache();
+                    const approved = await checkUserApproval();
+                    if (!approved) {
+                        await logout();
+                        this.showPendingApproval();
+                        return;
+                    }
                     this.onSuccess(this.email);
                     this.close();
                 } else {
@@ -122,6 +136,38 @@ export class LoginModal extends Modal {
             this.submitting = false;
             if (submitBtn) submitBtn.disabled = false;
         }
+    }
+
+    private showPendingApproval(): void {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass("mi-agrupacion-modal");
+
+        contentEl.createEl("h3", { text: "Cuenta pendiente de aprobación" });
+
+        contentEl.createEl("p", {
+            text: "Tu cuenta fue creada pero aún no fue aprobada. Para acceder a la sincronización, necesitamos verificar que sos parte de la comunidad bahá'í.",
+            cls: "mi-agrupacion-stat",
+        });
+
+        const contactCard = contentEl.createDiv({ cls: "mi-agrupacion-card" });
+        contactCard.createEl("p", {
+            text: "Enviá un correo a:",
+        });
+        contactCard.createEl("p", {
+            text: "jaliriogbarrios@gmail.com",
+            cls: "mi-agrupacion-pending-email",
+        });
+        contactCard.createEl("p", {
+            text: "Indicando tu nombre, localidad y comunidad bahá'í a la que pertenecés.",
+        });
+
+        const actions = contentEl.createDiv({
+            cls: "mi-agrupacion-form-actions",
+        });
+
+        const closeBtn = actions.createEl("button", { text: "Cerrar" });
+        closeBtn.addEventListener("click", () => this.close());
     }
 
     onClose(): void {

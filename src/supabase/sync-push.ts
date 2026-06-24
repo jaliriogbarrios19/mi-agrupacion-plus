@@ -1,5 +1,6 @@
-import { type App, TFile, normalizePath } from "obsidian";
+import { type App, TFile, normalizePath, Notice } from "obsidian";
 import { restUpsert, restDelete, isLoggedIn } from "./client";
+import { checkRateLimit, validateContent } from "./rate-limiter";
 
 export class PushHandler {
     private app: App;
@@ -58,6 +59,11 @@ export class PushHandler {
             const path = file.path;
             if (this.isExcluded(path)) return;
             void (async () => {
+                const deleteLimit = checkRateLimit("delete_per_hour");
+                if (!deleteLimit.allowed) {
+                    new Notice(deleteLimit.reason || "Límite de eliminación alcanzado.");
+                    return;
+                }
                 try {
                     await restDelete("notes", {
                         vault_id: `eq.${this.vaultId}`,
@@ -83,6 +89,8 @@ export class PushHandler {
     }
 
     private enqueue(path: string): void {
+        const syncLimit = checkRateLimit("sync_per_minute");
+        if (!syncLimit.allowed) return;
         this.pushQueue.add(path);
         if (this.debounceTimer) {
             window.clearTimeout(this.debounceTimer);
@@ -102,12 +110,22 @@ export class PushHandler {
         for (const path of paths) {
             const file = this.app.vault.getAbstractFileByPath(path);
             if (!(file instanceof TFile)) continue;
+
+            const pushLimit = checkRateLimit("push_per_hour");
+            if (!pushLimit.allowed) {
+                new Notice(pushLimit.reason || "Límite de sincronización alcanzado.");
+                break;
+            }
+
             try {
                 const content = await this.app.vault.cachedRead(file);
-                if (content.length > 1_000_000) {
-                    console.warn(`Mi Agrupacion Plus — skipping ${file.path}: too large (${content.length} bytes)`);
+
+                const validation = validateContent(content);
+                if (!validation.allowed) {
+                    console.warn(`Mi Agrupacion Plus — skipping ${file.path}: ${validation.reason}`);
                     continue;
                 }
+
                 await restUpsert(
                     "notes",
                     {

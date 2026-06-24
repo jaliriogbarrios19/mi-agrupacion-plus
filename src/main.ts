@@ -12,7 +12,7 @@ import { VidaComunitariaModal } from "./modals/vida-comunitaria-modal";
 import { ProcesoEducativoModal } from "./modals/proceso-educativo-modal";
 import { MaestroModal } from "./modals/maestro-modal";
 import { ReunionModal } from "./modals/reunion-modal";
-import { setSession, isLoggedIn, isSessionExpired, setOnTokenRefresh, setOnSessionExpired } from "./supabase/client";
+import { setSession, isLoggedIn, isSessionExpired, setOnTokenRefresh, setOnSessionExpired, checkApprovalCached } from "./supabase/client";
 import { SyncManager } from "./supabase/sync";
 import { WhatsNewModal } from "./whats-new-modal";
 
@@ -88,7 +88,14 @@ export default class MiAgrupacionPlugin extends Plugin {
             new Notice("Sesión expirada. Iniciá sesión de nuevo en Ajustes → Mi Agrupación.");
         });
         if (isLoggedIn() && !isSessionExpired()) {
-            this.startSync();
+            void (async () => {
+                const approved = await checkApprovalCached();
+                if (approved) {
+                    this.startSync();
+                } else {
+                    this.syncStatusBar?.setText("⚠️ Pendiente de aprobación");
+                }
+            })();
         }
 
         this.checkWhatsNew();
