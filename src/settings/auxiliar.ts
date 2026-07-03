@@ -55,12 +55,8 @@ function renderSyncSettings(ctx: SettingsContext, containerEl: HTMLElement): voi
                     void (async () => {
                         btn.setDisabled(true);
                         try {
-                            const plugin = ctx.plugin as unknown as { startSync?: () => void; stopSync?: () => void; syncManager?: { pushNow?: () => Promise<void> } };
-                            plugin.stopSync?.();
-                            plugin.startSync?.();
-                            if (plugin.syncManager?.pushNow) {
-                                await plugin.syncManager.pushNow();
-                            }
+                            const plugin = ctx.plugin as unknown as { syncNow?: () => Promise<void> };
+                            await plugin.syncNow?.();
                             new Notice("Sincronización completada");
                         } catch {
                             new Notice("Error al sincronizar");

@@ -1,4 +1,6 @@
-import { Modal, App, TFile } from "obsidian";
+import { Modal, App, TFile, Notice } from "obsidian";
+import type { DataManager } from "../data/manager";
+import { ConfirmModal } from "../utils/confirm";
 
 interface RecordEntry {
     file: TFile;
@@ -60,12 +62,16 @@ export class RecordListModal extends Modal {
     private records: RecordEntry[];
     private searchQuery = "";
     private onEditRecord: ((file: TFile) => void) | null = null;
+    private dataManager: DataManager | null = null;
+    private onDeleted: (() => void) | null = null;
 
-    constructor(app: App, title: string, records: RecordEntry[], onEditRecord?: (file: TFile) => void) {
+    constructor(app: App, title: string, records: RecordEntry[], onEditRecord?: (file: TFile) => void, dataManager?: DataManager, onDeleted?: () => void) {
         super(app);
         this.title = title;
         this.records = records;
         this.onEditRecord = onEditRecord ?? null;
+        this.dataManager = dataManager ?? null;
+        this.onDeleted = onDeleted ?? null;
     }
 
     onOpen(): void { this.showList(); }
@@ -156,6 +162,37 @@ export class RecordListModal extends Modal {
             }
             this.close();
         });
+        if (this.dataManager) {
+            const deleteBtn = actions.createEl("button", { text: "Eliminar" });
+            deleteBtn.addClass("mod-warning");
+            deleteBtn.addEventListener("click", () => {
+                void (async () => {
+                    const label = this.recordLabel(rec);
+                    const confirmed = await new ConfirmModal(
+                        this.app,
+                        `¿Eliminar "${label}"?\n\nEsta acción no se puede deshacer.`,
+                        "Cancelar",
+                        "Eliminar",
+                    ).show();
+                    if (!confirmed) return;
+                    try {
+                        const fotoPath = typeof rec.data.foto_actividad === "string" ? rec.data.foto_actividad : undefined;
+                        await this.dataManager!.deleteRecord(rec.file, fotoPath);
+                        this.records.splice(index, 1);
+                        new Notice("Registro eliminado");
+                        if (this.onDeleted) this.onDeleted();
+                        if (this.records.length > 0) {
+                            this.showList();
+                        } else {
+                            this.close();
+                        }
+                    } catch (e) {
+                        console.error("Mi Agrupacion — deleteRecord:", e);
+                        new Notice("Error al eliminar el registro");
+                    }
+                })();
+            });
+        }
     }
 
     private recordLabel(rec: RecordEntry): string {

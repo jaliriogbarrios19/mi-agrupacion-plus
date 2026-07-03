@@ -1,4 +1,4 @@
-import type { ScanResult } from "../data/manager";
+import type { ScanResult } from "../data/manager-scan";
 import type { Visita } from "../types";
 
 export function estimarHogares(visitas: ScanResult<Visita>[]): number {

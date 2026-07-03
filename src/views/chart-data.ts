@@ -1,4 +1,4 @@
-import type { ScanResult } from "../data/manager";
+import type { ScanResult } from "../data/manager-scan";
 import type {
     Visita,
     VidaComunitaria,

@@ -1,7 +1,7 @@
 import { Menu } from "obsidian";
 import type { Visita, VidaComunitaria, ProcesoEducativo, Reunion, Declaracion } from "../types";
 import { CICLOS } from "../types";
-import { type ScanResult } from "../data/manager";
+import { type ScanResult } from "../data/manager-scan";
 import { type CicloInfo } from "../utils/ciclo";
 import { parseDate } from "../utils/date";
 

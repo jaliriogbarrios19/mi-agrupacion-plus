@@ -13,7 +13,7 @@ import { ProcesoEducativoModal } from "./modals/proceso-educativo-modal";
 import { MaestroModal } from "./modals/maestro-modal";
 import { ReunionModal } from "./modals/reunion-modal";
 import { DeclaracionModal } from "./modals/declaracion-modal";
-import { setSession, isLoggedIn, isSessionExpired, setOnTokenRefresh, setOnSessionExpired, checkApprovalCached } from "./supabase/client";
+import { setSession, isLoggedIn, isSessionExpired, setOnTokenRefresh, setOnSessionExpired, checkApprovalCached, getCurrentUser } from "./supabase/client";
 import { SyncManager } from "./supabase/sync";
 import { WhatsNewModal } from "./whats-new-modal";
 
@@ -74,6 +74,17 @@ export default class MiAgrupacionPlugin extends Plugin {
         // Supabase init
         if (this.settings.authToken) {
             setSession(this.settings.authToken, this.settings.authEmail, this.settings.authRefreshToken);
+            // Validate token proactively — if it fails, clear session immediately
+            void (async () => {
+                const user = await getCurrentUser();
+                if (!user) {
+                    this.settings.authToken = "";
+                    this.settings.authEmail = "";
+                    this.settings.authRefreshToken = "";
+                    await this.saveSettings();
+                    new Notice("Sesión expirada. Iniciá sesión de nuevo en Ajustes → Mi Agrupación.");
+                }
+            })();
         }
         setOnTokenRefresh((token, refresh) => {
             this.settings.authToken = token;
@@ -136,7 +147,7 @@ export default class MiAgrupacionPlugin extends Plugin {
         this.addCommand({ id: "nueva-reunion", name: "Nueva reunión", callback: () => this.openReunionModal() });
         this.addCommand({ id: "registrar-ingreso", name: "Registrar ingreso", callback: () => this.openDeclaracionModal() });
         this.addCommand({ id: "sync-now", name: "Sincronizar ahora", callback: () => {
-            if (this.syncManager) { void this.syncManager.pushNow(); } else { new Notice("Configurá Supabase en los ajustes primero"); }
+            void this.syncNow();
         } });
     }
 
@@ -195,7 +206,7 @@ export default class MiAgrupacionPlugin extends Plugin {
         return "Registros";
     }
 
-    startSync(): void {
+    async startSync(): Promise<void> {
         this.stopSync();
         if (!this.settings.vaultId) return;
         if (isSessionExpired()) { this.syncStatusBar?.setText("⚠️ Sesión expirada"); return; }
@@ -211,6 +222,36 @@ export default class MiAgrupacionPlugin extends Plugin {
     stopSync(): void {
         if (this.syncManager) { this.syncManager.stop(); this.syncManager = null; }
         this.syncStatusBar?.setText("🏠 Agrupación");
+    }
+
+    async syncNow(): Promise<void> {
+        if (!isLoggedIn()) {
+            new Notice("Iniciá sesión primero en Ajustes → Mi Agrupación.");
+            return;
+        }
+        // Validate token first; refresh if needed
+        const user = await getCurrentUser();
+        if (!user) {
+            this.settings.authToken = "";
+            this.settings.authEmail = "";
+            this.settings.authRefreshToken = "";
+            await this.saveSettings();
+            new Notice("Sesión expirada. Iniciá sesión de nuevo en Ajustes → Mi Agrupación.");
+            return;
+        }
+        if (this.settings.setupMode === "admin") {
+            const approved = await checkApprovalCached();
+            if (!approved) {
+                new Notice("Tu cuenta está pendiente de aprobación. Contactá al desarrollador.");
+                this.syncStatusBar?.setText("⚠️ Pendiente de aprobación");
+                return;
+            }
+        }
+        this.stopSync();
+        this.startSync(); // fire-and-forget; the SyncManager.start() is internally async
+        if (this.syncManager) {
+            await this.syncManager.pushNow();
+        }
     }
 
     onunload(): void {

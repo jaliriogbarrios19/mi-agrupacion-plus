@@ -116,7 +116,7 @@ function unescapeYamlValue(value: string): string {
 export function stringifyYaml(data: Record<string, unknown>): string {
     const lines: string[] = [];
 
-    for (const [key, value] of Object.entries(data)) {
+    for (const [key, value] of Object.entries(data) as [string, unknown][]) {
         if (value === undefined || value === null) continue;
 
         if (Array.isArray(value)) {

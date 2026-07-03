@@ -1,5 +1,5 @@
 import type { Visita, VidaComunitaria, ProcesoEducativo, MiAgrupacionSettings } from "../types";
-import type { ScanResult } from "../data/manager";
+import type { ScanResult } from "../data/manager-scan";
 import { estimarHogares } from "./hogares";
 
 function section(title: string): string {

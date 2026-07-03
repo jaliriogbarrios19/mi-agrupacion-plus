@@ -1,13 +1,9 @@
 import { ItemView, WorkspaceLeaf, TFile, Notice, normalizePath, Platform, Setting } from "obsidian";
-import type { MiAgrupacionSettings, Visita, VidaComunitaria, ProcesoEducativo, Reunion, Declaracion } from "../types";
+import type { MiAgrupacionSettings } from "../types";
 import { VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA } from "../types";
-import { DataManager, type ScanResult } from "../data/manager";
+import { DataManager } from "../data/manager";
 import { ExportModal } from "../modals/export-modal";
 import { generateInforme } from "../utils/informe";
-import { VisitaModal } from "../modals/visita-modal";
-import { VidaComunitariaModal } from "../modals/vida-comunitaria-modal";
-import { ProcesoEducativoModal } from "../modals/proceso-educativo-modal";
-import { ReunionModal } from "../modals/reunion-modal";
 import { DeclaracionModal } from "../modals/declaracion-modal";
 import { parseDate } from "../utils/date";
 import { type CicloInfo, detectarCiclo } from "../utils/ciclo";

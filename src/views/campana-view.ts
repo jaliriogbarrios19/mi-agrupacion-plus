@@ -1,7 +1,8 @@
 import { ItemView, WorkspaceLeaf, Setting } from "obsidian";
 import type { MiAgrupacionSettings, Visita } from "../types";
 import { VIEW_TYPE_CAMPANA } from "../types";
-import { DataManager, type ScanResult } from "../data/manager";
+import { DataManager } from "../data/manager";
+import type { ScanResult } from "../data/manager-scan";
 import { detectarCiclo, type CicloInfo } from "../utils/ciclo";
 import { estimarHogares } from "../utils/hogares";
 import {

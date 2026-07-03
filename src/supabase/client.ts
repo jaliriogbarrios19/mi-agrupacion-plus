@@ -12,7 +12,7 @@ function translateAuthError(error: string): string {
         "A user with this email address has already been registered": "Ya existe una cuenta con este email",
         "Unable to validate email address: invalid format": "Formato de email inválido",
     };
-    for (const [en, es] of Object.entries(translations)) {
+    for (const [en, es] of Object.entries(translations) as [string, string][]) {
         if (error.toLowerCase().includes(en.toLowerCase())) return es;
     }
     return error;
@@ -98,16 +98,27 @@ export async function api(
         return { status: res.status, json: res.json };
     } catch (e) {
         const msg = String(e);
-        if (msg.includes("401") && accessToken && !sessionExpired) {
+        // requestUrl throws for non-2xx; extract status and body from the error
+        const statusMatch = msg.match(/status[:\s]*(\d{3})/);
+        const status = statusMatch ? parseInt(statusMatch[1], 10) : 0;
+
+        if (status === 401 && accessToken && !sessionExpired) {
             const refreshed = await refreshSession();
             if (refreshed) {
-                params.headers = authHeaders();
-                const retry = await requestUrl(params);
-                return { status: retry.status, json: retry.json };
+                params.headers = { ...authHeaders(), ...extraHeaders };
+                try {
+                    const retry = await requestUrl(params);
+                    return { status: retry.status, json: retry.json };
+                } catch (retryErr) {
+                    const retryMsg = String(retryErr);
+                    const retryStatus = retryMsg.match(/status[:\s]*(\d{3})/)?.[1];
+                    return { status: parseInt(retryStatus || "0", 10), json: { error: retryMsg } };
+                }
             }
             markSessionExpired();
         }
-        throw e;
+
+        return { status, json: { error: msg } };
     }
 }
 
@@ -226,11 +237,12 @@ export async function restUpsert<T>(table: string, body: T, onConflict: string):
     try {
         const res = await api("POST", `/rest/v1/${table}?on_conflict=${onConflict}`, body, { "Prefer": "resolution=merge-duplicates" });
         if (res.status < 200 || res.status >= 300) {
-            console.warn(`Mi Agrupacion Plus — restUpsert ${table} failed:`, res.status, res.json);
+            console.warn(`Mi Agrupacion Plus — restUpsert ${table} failed:`, res.status, JSON.stringify(res.json));
         }
         return res.status >= 200 && res.status < 300;
     } catch (e) {
-        console.warn(`Mi Agrupacion Plus — restUpsert ${table} error:`, e instanceof Error ? e.message : String(e));
+        const msg = e instanceof Error ? e.message : String(e);
+        console.warn(`Mi Agrupacion Plus — restUpsert ${table} error:`, msg);
         return false;
     }
 }

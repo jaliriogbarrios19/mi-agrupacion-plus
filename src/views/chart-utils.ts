@@ -46,7 +46,7 @@ export interface TrendSeries {
 const chartCleanups = new WeakMap<HTMLElement, Map<string, () => void>>();
 
 function getThemeColors(): Record<string, string> {
-    const s = getComputedStyle(document.body);
+    const s = getComputedStyle(activeDocument.body);
     return {
         accent: s.getPropertyValue("--text-accent").trim() || "#6c8ccf",
         muted: s.getPropertyValue("--text-muted").trim() || "#87939d",
@@ -242,7 +242,7 @@ export function renderDoughnutChart(
                 tooltip: {
                     callbacks: {
                         label: (ctx) => {
-                            const total = (ctx.dataset.data as number[]).reduce((a, b) => a + b, 0);
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
                             const v = ctx.parsed;
                             const pct = total > 0 ? ((v / total) * 100).toFixed(1) : "0";
                             return `${ctx.label}: ${v} (${pct}%)`;
