@@ -4,7 +4,7 @@ import {
     TFolder,
     normalizePath,
 } from "obsidian";
-import type { MiAgrupacionSettings, Maestro, Visita, VidaComunitaria, ProcesoEducativo, Reunion } from "../types";
+import type { MiAgrupacionSettings, Maestro, Visita, VidaComunitaria, ProcesoEducativo, Reunion, Declaracion } from "../types";
 import { parseFrontmatterFromContent } from "./parser";
 
 export interface ScanResult<T> {
@@ -119,25 +119,29 @@ export class DataManagerScan {
         vidaComunitaria: ScanResult<VidaComunitaria>[];
         procesoEducativo: ScanResult<ProcesoEducativo>[];
         reuniones: ScanResult<Reunion>[];
+        declaraciones: ScanResult<Declaracion>[];
     }> {
         const sectores = this.getSectores().length > 0 ? this.getSectores() : [];
         const allV: ScanResult<Visita>[] = [];
         const allVC: ScanResult<VidaComunitaria>[] = [];
         const allPE: ScanResult<ProcesoEducativo>[] = [];
         const allR: ScanResult<Reunion>[] = [];
+        const allD: ScanResult<Declaracion>[] = [];
 
         // Legacy paths (without sector) for backward compatibility
         const base = this.basePath();
-        const [legacyV, legacyVC, legacyPE, legacyR] = await Promise.all([
+        const [legacyV, legacyVC, legacyPE, legacyR, legacyD] = await Promise.all([
             this.scanRecords(normalizePath(`${base}/${anioEtiqueta}/${ciclo}/Visitas`)),
             this.scanRecords(normalizePath(`${base}/${anioEtiqueta}/${ciclo}/VidaComunitaria`)),
             this.scanRecords(normalizePath(`${base}/${anioEtiqueta}/${ciclo}/ProcesoEducativo`)),
             this.scanRecords(normalizePath(`${base}/${anioEtiqueta}/${ciclo}/Reuniones`)),
+            this.scanRecords(normalizePath(`${base}/${anioEtiqueta}/${ciclo}/Declaraciones`)),
         ]);
         allV.push(...legacyV.map(r => ({ file: r.file, data: r.data as unknown as Visita })));
         allVC.push(...legacyVC.map(r => ({ file: r.file, data: r.data as unknown as VidaComunitaria })));
         allPE.push(...legacyPE.map(r => ({ file: r.file, data: r.data as unknown as ProcesoEducativo })));
         allR.push(...legacyR.map(r => ({ file: r.file, data: r.data as unknown as Reunion })));
+        allD.push(...legacyD.map(r => ({ file: r.file, data: r.data as unknown as Declaracion })));
 
         for (const sector of sectores) {
             const [visitas, vidaComunitaria, procesoEducativo, reuniones] =
@@ -153,7 +157,7 @@ export class DataManagerScan {
             allR.push(...reuniones.map(r => ({ file: r.file, data: r.data as unknown as Reunion })));
         }
 
-        return { visitas: allV, vidaComunitaria: allVC, procesoEducativo: allPE, reuniones: allR };
+        return { visitas: allV, vidaComunitaria: allVC, procesoEducativo: allPE, reuniones: allR, declaraciones: allD };
     }
 
     async readRecord(file: TFile): Promise<Record<string, unknown>> {

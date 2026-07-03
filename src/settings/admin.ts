@@ -9,6 +9,7 @@ import {
 } from "../supabase/client";
 import { rpcGenerateInvitation, rpcGetPendingUsers, rpcApproveUser } from "../supabase/rpc";
 import { LoginModal } from "../supabase/login-modal";
+import { renderMetasCiclo } from "./admin-metas";
 
 export function renderAdminPanel(ctx: SettingsContext, containerEl: HTMLElement): void {
     new Setting(containerEl).setHeading().setName(ctx.settings.vaultName || "Mi Agrupación");
@@ -30,6 +31,7 @@ export function renderAdminPanel(ctx: SettingsContext, containerEl: HTMLElement)
     renderSectores(ctx, containerEl);
     renderInvitation(ctx, containerEl);
     renderSyncSettings(ctx, containerEl);
+    renderMetasCiclo(ctx, containerEl);
     renderSession(ctx, containerEl);
     renderPendingUsers(ctx, containerEl);
     renderFooter(containerEl);

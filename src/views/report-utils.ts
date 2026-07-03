@@ -1,5 +1,5 @@
 import { Menu } from "obsidian";
-import type { Visita, VidaComunitaria, ProcesoEducativo, Reunion } from "../types";
+import type { Visita, VidaComunitaria, ProcesoEducativo, Reunion, Declaracion } from "../types";
 import { CICLOS } from "../types";
 import { type ScanResult } from "../data/manager";
 import { type CicloInfo } from "../utils/ciclo";
@@ -61,7 +61,7 @@ export function renderSearchInput(
     return () => { if (timer) { window.clearTimeout(timer); timer = null; } };
 }
 
-export function matchesSearch<T extends ScanResult<Visita | VidaComunitaria | ProcesoEducativo | Reunion>>(
+export function matchesSearch<T extends ScanResult<Visita | VidaComunitaria | ProcesoEducativo | Reunion | Declaracion>>(
     r: T,
     query: string,
 ): boolean {
@@ -76,10 +76,12 @@ export function matchesSearch<T extends ScanResult<Visita | VidaComunitaria | Pr
     return false;
 }
 
-export function sortByDateDesc<T extends ScanResult<Visita | VidaComunitaria | ProcesoEducativo | Reunion>>(records: T[]): T[] {
+export function sortByDateDesc<T extends ScanResult<Visita | VidaComunitaria | ProcesoEducativo | Reunion | Declaracion>>(records: T[]): T[] {
     return [...records].sort((a, b) => {
-        const da = parseDate((a.data as { fecha?: string }).fecha || "");
-        const db = parseDate((b.data as { fecha?: string }).fecha || "");
+        const rawA = a.data as unknown as Record<string, unknown>;
+        const rawB = b.data as unknown as Record<string, unknown>;
+        const da = parseDate(String(rawA.fecha || rawA.fecha_declaracion || ""));
+        const db = parseDate(String(rawB.fecha || rawB.fecha_declaracion || ""));
         return db.getTime() - da.getTime();
     });
 }

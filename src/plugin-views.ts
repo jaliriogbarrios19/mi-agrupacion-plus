@@ -56,7 +56,7 @@ export function registerViews(
     }
 ): void {
     registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf as never, settings, dataManager, callbacks));
-    registerView(VIEW_TYPE_GENERAL, (leaf) => new GeneralView(leaf as never, settings, dataManager));
-    registerView(VIEW_TYPE_RESUMEN_SRP, (leaf) => new ResumenSRPView(leaf as never, settings, dataManager));
-    registerView(VIEW_TYPE_CAMPANA, (leaf) => new CampanaView(leaf as never, settings, dataManager));
+    registerView(VIEW_TYPE_GENERAL, (leaf) => new GeneralView(leaf as never, settings, dataManager, () => {}));
+    registerView(VIEW_TYPE_RESUMEN_SRP, (leaf) => new ResumenSRPView(leaf as never, settings, dataManager, () => {}));
+    registerView(VIEW_TYPE_CAMPANA, (leaf) => new CampanaView(leaf as never, settings, dataManager, () => {}));
 }

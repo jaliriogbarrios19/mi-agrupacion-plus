@@ -1,7 +1,7 @@
-import type { Visita, VidaComunitaria, ProcesoEducativo, Maestro, Reunion } from "../types";
+import type { Visita, VidaComunitaria, ProcesoEducativo, Maestro, Reunion, Declaracion } from "../types";
 
 export function visitaTemplate(data: Visita): string {
-    const maestros = data.maestros.map((m) => `  - ${m}`).join("\n");
+    const maestros = (data.maestros || []).map((m) => `  - ${m}`).join("\n");
     const visitados = data.nombres_visitados
         ? data.nombres_visitados.map((n) => `  - ${n}`).join("\n")
         : "";
@@ -28,8 +28,8 @@ export function visitaTemplate(data: Visita): string {
 }
 
 export function vidaComunitariaTemplate(data: VidaComunitaria): string {
-    const bahais = data.asist_bahais.map((a) => `  - ${a}`).join("\n");
-    const simpatizantes = data.asist_simpatizantes
+    const bahais = (data.asist_bahais || []).map((a) => `  - ${a}`).join("\n");
+    const simpatizantes = (data.asist_simpatizantes || [])
         .map((a) => `  - ${a}`)
         .join("\n");
     const fecha = data.fecha || "";
@@ -51,7 +51,7 @@ export function vidaComunitariaTemplate(data: VidaComunitaria): string {
 }
 
 export function procesoEducativoTemplate(data: ProcesoEducativo): string {
-    const participantes = data.participantes
+    const participantes = (data.participantes || [])
         .map((p) => `  - ${p}`)
         .join("\n");
     const fecha = data.fecha || "";
@@ -80,7 +80,7 @@ export function maestroTemplate(data: Maestro): string {
 }
 
 export function reunionTemplate(data: Reunion): string {
-    const asistentes = data.asist_bahais.map((a) => `  - ${a}`).join("\n");
+    const asistentes = (data.asist_bahais || []).map((a) => `  - ${a}`).join("\n");
     const fecha = data.fecha || "";
     const titulo = data.tipo_reunion === "Otro" && data.nombre_custom
         ? data.nombre_custom
@@ -97,5 +97,15 @@ export function reunionTemplate(data: Reunion): string {
     if (data.foto_actividad) {
         body += `\n## Foto\n![[${data.foto_actividad}]]\n`;
     }
+    return body;
+}
+
+export function declaracionTemplate(data: Declaracion): string {
+    const fecha = data.fecha_declaracion || "";
+    let body = `# Declaración — ${data.nombre} ${data.apellido}\n\n`;
+    body += `**Nombre:** ${data.nombre}\n`;
+    body += `**Apellido:** ${data.apellido}\n`;
+    body += `**Fecha de declaración:** ${fecha}\n`;
+    body += `**Reportado por:** ${data.reportado_por}\n`;
     return body;
 }

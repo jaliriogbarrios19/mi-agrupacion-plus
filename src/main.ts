@@ -12,6 +12,7 @@ import { VidaComunitariaModal } from "./modals/vida-comunitaria-modal";
 import { ProcesoEducativoModal } from "./modals/proceso-educativo-modal";
 import { MaestroModal } from "./modals/maestro-modal";
 import { ReunionModal } from "./modals/reunion-modal";
+import { DeclaracionModal } from "./modals/declaracion-modal";
 import { setSession, isLoggedIn, isSessionExpired, setOnTokenRefresh, setOnSessionExpired, checkApprovalCached } from "./supabase/client";
 import { SyncManager } from "./supabase/sync";
 import { WhatsNewModal } from "./whats-new-modal";
@@ -115,10 +116,12 @@ export default class MiAgrupacionPlugin extends Plugin {
             openStandalone: (type: string) => { void this.activateView(type); },
         };
 
+        const goToDashboard = () => { void this.activateView(VIEW_TYPE_DASHBOARD); };
+
         this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this.settings, this.dataManager, callbacks));
-        this.registerView(VIEW_TYPE_GENERAL, (leaf) => new GeneralView(leaf, this.settings, this.dataManager));
-        this.registerView(VIEW_TYPE_RESUMEN_SRP, (leaf) => new ResumenSRPView(leaf, this.settings, this.dataManager));
-        this.registerView(VIEW_TYPE_CAMPANA, (leaf) => new CampanaView(leaf, this.settings, this.dataManager));
+        this.registerView(VIEW_TYPE_GENERAL, (leaf) => new GeneralView(leaf, this.settings, this.dataManager, goToDashboard));
+        this.registerView(VIEW_TYPE_RESUMEN_SRP, (leaf) => new ResumenSRPView(leaf, this.settings, this.dataManager, goToDashboard));
+        this.registerView(VIEW_TYPE_CAMPANA, (leaf) => new CampanaView(leaf, this.settings, this.dataManager, goToDashboard));
     }
 
     private registerCommands(): void {
@@ -131,6 +134,7 @@ export default class MiAgrupacionPlugin extends Plugin {
         this.addCommand({ id: "nuevo-proceso-educativo", name: "Nuevo registro de proceso educativo", callback: () => this.openProcesoEducativoModal() });
         this.addCommand({ id: "nuevo-maestro", name: "Nuevo maestro", callback: () => this.openMaestroModal() });
         this.addCommand({ id: "nueva-reunion", name: "Nueva reunión", callback: () => this.openReunionModal() });
+        this.addCommand({ id: "registrar-ingreso", name: "Registrar ingreso", callback: () => this.openDeclaracionModal() });
         this.addCommand({ id: "sync-now", name: "Sincronizar ahora", callback: () => {
             if (this.syncManager) { void this.syncManager.pushNow(); } else { new Notice("Configurá Supabase en los ajustes primero"); }
         } });
@@ -141,6 +145,7 @@ export default class MiAgrupacionPlugin extends Plugin {
     private openProcesoEducativoModal(): void { new ProcesoEducativoModal(this.app, this.dataManager, () => this.refreshAllViews()).open(); }
     private openMaestroModal(): void { new MaestroModal(this.app, this.dataManager, () => this.refreshAllViews()).open(); }
     private openReunionModal(): void { new ReunionModal(this.app, this.dataManager, () => this.refreshAllViews()).open(); }
+    private openDeclaracionModal(): void { new DeclaracionModal(this.app, this.dataManager, () => this.refreshAllViews()).open(); }
 
     async activateView(viewType: string): Promise<void> {
         const { workspace } = this.app;
@@ -157,7 +162,7 @@ export default class MiAgrupacionPlugin extends Plugin {
     refreshAllViews(): void {
         for (const vt of [VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA]) {
             const view = this.getExistingView(vt);
-            if (view && typeof (view as { render: () => void }).render === "function") { (view as { render: () => void }).render(); }
+            if (view && typeof (view as { render: () => Promise<void> }).render === "function") { void (view as { render: () => Promise<void> }).render(); }
         }
     }
 

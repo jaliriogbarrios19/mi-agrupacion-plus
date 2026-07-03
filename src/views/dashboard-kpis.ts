@@ -1,5 +1,5 @@
 import { App, Setting, TFile } from "obsidian";
-import type { Visita, VidaComunitaria, ProcesoEducativo, Reunion } from "../types";
+import type { Visita, VidaComunitaria, ProcesoEducativo, Reunion, Declaracion } from "../types";
 import { type ScanResult } from "../data/manager";
 import { RecordListModal } from "../modals/record-list-modal";
 import { PersonListModal } from "../modals/person-list-modal";
@@ -13,7 +13,8 @@ export function renderGeneralKPIs(
     vc: ScanResult<VidaComunitaria>[],
     pe: ScanResult<ProcesoEducativo>[],
     reuniones: ScanResult<Reunion>[],
-    openEditModal: (file: TFile, kind: "visita" | "vc" | "pe" | "reunion") => void,
+    declaraciones: ScanResult<Declaracion>[],
+    openEditModal: (file: TFile, kind: "visita" | "vc" | "pe" | "reunion" | "declaracion") => void,
 ): void {
     const totalV = visitas.length;
     const personas = new Set(visitas.flatMap(v => v.data.nombres_visitados)).size;
@@ -39,6 +40,8 @@ export function renderGeneralKPIs(
     const asistentesReuniones = new Set(reuniones.flatMap(r => r.data.asist_bahais));
     kpi(grid, "Asistentes a reuniones", String(asistentesReuniones.size), () =>
         new PersonListModal(app, "Asistentes a reuniones", [...asistentesReuniones].sort()).open());
+    kpi(grid, "Ingresos", String(declaraciones.length), () =>
+        new RecordListModal(app, "Ingresos", declaraciones.map(r => ({ file: r.file, data: r.data as unknown as Record<string, unknown> })), (f) => openEditModal(f, "declaracion")).open());
 }
 
 export function renderSRPVisitas(container: HTMLElement, visitas: ScanResult<Visita>[]): void {

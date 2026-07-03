@@ -130,15 +130,19 @@ export function generateInforme(
     const enCamp = visitas.filter(v => v.data.campana_expansion === true);
     if (enCamp.length > 0) {
         md += section("📱 Campaña de Expansión");
-        let totalPer = 0;
-        for (const v of visitas) totalPer += (v.data.personas_visitadas || 0);
+        const alcanzadas = new Set(enCamp.flatMap(v => v.data.nombres_visitados)).size;
         const nuevos = enCamp.filter(v => v.data.hogar_nuevo === true).length;
         const bahais = visitas.filter(v => v.data.condicion === "Bahá'í").length;
         const simp = visitas.filter(v => v.data.condicion === "Simpatizante").length;
-        md += `- Visitas en campaña: ${enCamp.length}\n`;
+        const mSet = new Set(visitas.flatMap(v => v.data.maestros));
+        const totalV = visitas.length;
+        const hog = totalV > 0 ? estimarHogares(visitas) : 0;
+        md += `- Personas alcanzadas: ${alcanzadas}\n`;
+        md += `- Maestros únicos: ${mSet.size}\n`;
         md += `- Hogares nuevos: ${nuevos}\n`;
-        md += `- Personas alcanzadas: ${totalPer}\n`;
-        md += `- Bahá'ís visitados: ${bahais} · Simpatizantes: ${simp}\n`;
+        md += `- Bahá'ís: ${bahais} · Simpatizantes: ${simp}\n`;
+        md += `- Total de visitas: ${totalV}\n`;
+        md += `- ~Hogares visitados: ${hog}\n`;
     }
 
     md += `\n---\n📱 *Generado con Mi Agrupación*\n`;

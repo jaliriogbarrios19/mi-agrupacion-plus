@@ -1,5 +1,5 @@
 import { App, normalizePath, TFile, TFolder } from "obsidian";
-import type { MiAgrupacionSettings, Maestro, Visita, VidaComunitaria, ProcesoEducativo, Reunion } from "../types";
+import type { MiAgrupacionSettings, Maestro, Visita, VidaComunitaria, ProcesoEducativo, Reunion, Declaracion } from "../types";
 import { buildMarkdownNote } from "./parser";
 import {
     visitaTemplate,
@@ -7,6 +7,7 @@ import {
     procesoEducativoTemplate,
     maestroTemplate,
     reunionTemplate,
+    declaracionTemplate,
 } from "./templates";
 import { DataManagerScan, type ScanResult } from "./manager-scan";
 
@@ -252,6 +253,24 @@ export class DataManager extends DataManagerScan {
         const filename = `${fecha}-${tipo.replace(/[\\/:*?"<>|]/g, "-")}`;
         const sector = String(frontmatter.sector || this.getSectores()[0] || "");
         const folder = this.recordsPath(sector, anioEtiqueta, ciclo, "Reuniones");
+        return this.saveRecord(frontmatter, body, folder, filename);
+    }
+
+    buildDeclaracionFilename(data: Record<string, unknown>): string {
+        const nombre = String(data.nombre || "").slice(0, 30);
+        const apellido = String(data.apellido || "").slice(0, 30);
+        const fecha = String(data.fecha_declaracion || "").replace(/\//g, "-");
+        return `${fecha}-${nombre}-${apellido}`.replace(/[\\/:*?"<>|]/g, "-");
+    }
+
+    async saveDeclaracion(
+        frontmatter: Record<string, unknown>,
+        anioEtiqueta: string,
+        ciclo: string
+    ): Promise<TFile> {
+        const body = declaracionTemplate(frontmatter as unknown as Declaracion);
+        const filename = this.buildDeclaracionFilename(frontmatter);
+        const folder = normalizePath(`${this.basePath()}/${anioEtiqueta}/${ciclo}/Declaraciones`);
         return this.saveRecord(frontmatter, body, folder, filename);
     }
 }
