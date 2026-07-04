@@ -80,18 +80,7 @@ function renderInvitation(ctx: SettingsContext, containerEl: HTMLElement): void 
                                         await navigator.clipboard.writeText(res.code!);
                                         new Notice("Código copiado");
                                     } catch {
-                                        const ta = activeDocument.createElement("textarea");
-                                        ta.value = res.code!;
-                                        ta.addClass("mi-agrupacion-hidden-textarea");
-                                        activeDocument.body.appendChild(ta);
-                                        ta.select();
-                                        try {
-                                            activeDocument.execCommand("copy");
-                                            new Notice("Código copiado");
-                                        } catch {
-                                            new Notice("No se pudo copiar. Seleccioná el código manualmente.");
-                                        }
-                                        activeDocument.body.removeChild(ta);
+                                        new Notice("No se pudo copiar. Seleccioná el código manualmente.");
                                     }
                                 })();
                             })

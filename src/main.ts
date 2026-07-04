@@ -13,7 +13,7 @@ import { ProcesoEducativoModal } from "./modals/proceso-educativo-modal";
 import { MaestroModal } from "./modals/maestro-modal";
 import { ReunionModal } from "./modals/reunion-modal";
 import { DeclaracionModal } from "./modals/declaracion-modal";
-import { setSession, isLoggedIn, isSessionExpired, setOnTokenRefresh, setOnSessionExpired, checkApprovalCached, getCurrentUser } from "./supabase/client";
+import { setSession, isLoggedIn, isSessionExpired, setOnTokenRefresh, setOnSessionExpired, checkApprovalCached, getCurrentUser, startRefreshTimer, stopRefreshTimer } from "./supabase/client";
 import { SyncManager } from "./supabase/sync";
 import { WhatsNewModal } from "./whats-new-modal";
 
@@ -74,10 +74,12 @@ export default class MiAgrupacionPlugin extends Plugin {
         // Supabase init
         if (this.settings.authToken) {
             setSession(this.settings.authToken, this.settings.authEmail, this.settings.authRefreshToken);
+            startRefreshTimer();
             // Validate token proactively — if it fails, clear session immediately
             void (async () => {
                 const user = await getCurrentUser();
                 if (!user) {
+                    stopRefreshTimer();
                     this.settings.authToken = "";
                     this.settings.authEmail = "";
                     this.settings.authRefreshToken = "";

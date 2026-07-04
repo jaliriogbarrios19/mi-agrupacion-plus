@@ -25,6 +25,9 @@ let sessionExpired = false;
 let refreshing: Promise<boolean> | null = null;
 let onTokenRefresh: ((token: string, refresh: string) => void) | null = null;
 let onSessionExpired: (() => void) | null = null;
+let refreshTimer: number | null = null;
+
+const REFRESH_INTERVAL_MS = 45 * 60 * 1000; // 45 minutes (before default 1h JWT expiry)
 
 export function setOnTokenRefresh(cb: (token: string, refresh: string) => void): void {
     onTokenRefresh = cb;
@@ -46,13 +49,34 @@ export function clearSession(): void {
     refreshToken = "";
     userEmail = "";
     sessionExpired = false;
+    stopRefreshTimer();
 }
 
 export function markSessionExpired(): void {
     accessToken = "";
     refreshToken = "";
     sessionExpired = true;
+    stopRefreshTimer();
     if (onSessionExpired) onSessionExpired();
+}
+
+export function startRefreshTimer(): void {
+    stopRefreshTimer();
+    if (!accessToken || sessionExpired) return;
+    refreshTimer = window.setInterval(() => {
+        void (async () => {
+            if (!accessToken || sessionExpired) { stopRefreshTimer(); return; }
+            const ok = await refreshSession();
+            if (!ok) markSessionExpired();
+        })();
+    }, REFRESH_INTERVAL_MS);
+}
+
+export function stopRefreshTimer(): void {
+    if (refreshTimer) {
+        window.clearInterval(refreshTimer);
+        refreshTimer = null;
+    }
 }
 
 export function isSessionExpired(): boolean {
@@ -166,6 +190,7 @@ export async function signup(
                 refreshToken = d.refresh_token || "";
                 userEmail = d.user?.email || email;
                 sessionExpired = false;
+                startRefreshTimer();
             }
             return { success: true, autoConfirmed: hasToken };
         }
@@ -191,6 +216,7 @@ export async function login(
             refreshToken = data.refresh_token;
             userEmail = data.user?.email || email;
             sessionExpired = false;
+            startRefreshTimer();
             return { success: true };
         }
         const data = res.json as Record<string, unknown>;
