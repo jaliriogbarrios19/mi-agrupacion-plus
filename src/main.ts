@@ -250,7 +250,7 @@ export default class MiAgrupacionPlugin extends Plugin {
             }
         }
         this.stopSync();
-        this.startSync(); // fire-and-forget; the SyncManager.start() is internally async
+        void this.startSync(); // fire-and-forget; the SyncManager.start() is internally async
         if (this.syncManager) {
             await this.syncManager.pushNow();
         }

@@ -59,15 +59,38 @@ export class CampanaView extends ItemView {
             contentEl.createEl("p", { text: "Error al cargar datos.", cls: "mi-agrupacion-stat" }); return;
         }
         let { visitas } = s;
-        if (this.searchQuery) visitas = visitas.filter(v => matchesSearch(v, this.searchQuery));
+        if (this.searchQuery) {
+            const q = this.searchQuery;
+            const sv: ScanResult<Visita>[] = [];
+            for (const v of visitas) { if (matchesSearch(v, q)) sv.push(v); }
+            visitas = sv;
+        }
         visitas = sortByDateDesc(visitas);
-        const enCamp = visitas.filter((v: ScanResult<Visita>) => v.data.campana_expansion === true);
-        const visitadosFlat: string[] = enCamp.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados);
+        const enCamp: ScanResult<Visita>[] = [];
+        for (const v of visitas) {
+            if (v.data.campana_expansion === true) enCamp.push(v);
+        }
+        const visitadosFlat: string[] = [];
+        for (const v of enCamp) {
+            for (const n of v.data.nombres_visitados) { visitadosFlat.push(n); }
+        }
         const alcanzadas = new Set(visitadosFlat).size;
-        const nuevos = enCamp.filter((v: ScanResult<Visita>) => v.data.hogar_nuevo === true).length;
-        const bahais = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Bahá'í").length;
-        const simp = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Simpatizante").length;
-        const mFlat: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros);
+        let nuevos = 0;
+        for (const v of enCamp) {
+            if (v.data.hogar_nuevo === true) nuevos++;
+        }
+        let bahais = 0;
+        for (const v of visitas) {
+            if (v.data.condicion === "Bahá'í") bahais++;
+        }
+        let simp = 0;
+        for (const v of visitas) {
+            if (v.data.condicion === "Simpatizante") simp++;
+        }
+        const mFlat: string[] = [];
+        for (const v of visitas) {
+            for (const m of v.data.maestros) { mFlat.push(m); }
+        }
         const mSet = new Set(mFlat);
         const totalV = visitas.length;
         const hog = totalV > 0 ? estimarHogares(visitas) : 0;

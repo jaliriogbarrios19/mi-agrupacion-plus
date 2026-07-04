@@ -12,7 +12,8 @@ function translateAuthError(error: string): string {
         "A user with this email address has already been registered": "Ya existe una cuenta con este email",
         "Unable to validate email address: invalid format": "Formato de email inválido",
     };
-    for (const [en, es] of Object.entries(translations) as [string, string][]) {
+    for (const en of Object.keys(translations)) {
+        const es = translations[en];
         if (error.toLowerCase().includes(en.toLowerCase())) return es;
     }
     return error;

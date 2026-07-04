@@ -14,8 +14,9 @@ export function generateInforme(
     procesoEducativo: ScanResult<ProcesoEducativo>[],
 ): string {
     const fecha = new Date().toLocaleDateString("es-VE");
-    const sectoresNombres: string[] = visitas.map((v: ScanResult<Visita>) => v.data.sector);
-    const sectores = [...new Set(sectoresNombres)];
+    const sectoresSet = new Set<string>();
+    for (const v of visitas) { sectoresSet.add(v.data.sector); }
+    const sectores = [...sectoresSet];
     let md = "";
     md += `# Informe General — ${settings.nombreAgrupacion.trim() || "Mi Agrupación"}\n`;
     md += `### Ciclo ${cicloLabel}\n`;
@@ -24,19 +25,49 @@ export function generateInforme(
     // ── KPIs Globales ──
     md += section("📊 Resumen del Ciclo");
     const totalV = visitas.length;
-    const nombresVisitados: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados);
-    const personasV = new Set(nombresVisitados).size;
+    const nombresVSet = new Set<string>();
+    for (const v of visitas) {
+        for (const n of v.data.nombres_visitados) {
+            nombresVSet.add(n);
+        }
+    }
+    const personasV = nombresVSet.size;
     const hogaresV = totalV > 0 ? estimarHogares(visitas) : 0;
-    const maestrosNombres: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros);
-    const maestrosSet = new Set(maestrosNombres);
-    const f19 = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Fiesta de 19 días");
-    const ds = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Día Sagrado");
-    const otras = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad !== "Fiesta de 19 días" && v.data.tipo_actividad !== "Día Sagrado");
-    const participantesF19: string[] = f19.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]);
-    const pF19 = new Set(participantesF19);
-    const clases = procesoEducativo.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "Clase de Niños");
-    const gpj = procesoEducativo.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "GPJ");
-    const ce = procesoEducativo.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "Círculo de Estudio");
+    const maestrosSet = new Set<string>();
+    for (const v of visitas) {
+        for (const m of v.data.maestros) {
+            maestrosSet.add(m);
+        }
+    }
+    const f19: ScanResult<VidaComunitaria>[] = [];
+    for (const v of vidaComunitaria) {
+        if (v.data.tipo_actividad === "Fiesta de 19 días") f19.push(v);
+    }
+    const ds: ScanResult<VidaComunitaria>[] = [];
+    for (const v of vidaComunitaria) {
+        if (v.data.tipo_actividad === "Día Sagrado") ds.push(v);
+    }
+    const otras: ScanResult<VidaComunitaria>[] = [];
+    for (const v of vidaComunitaria) {
+        if (v.data.tipo_actividad !== "Fiesta de 19 días" && v.data.tipo_actividad !== "Día Sagrado") otras.push(v);
+    }
+    const pF19 = new Set<string>();
+    for (const v of f19) {
+        for (const b of (v.data.asist_bahais || [])) { pF19.add(b); }
+        for (const s of (v.data.asist_simpatizantes || [])) { pF19.add(s); }
+    }
+    const clases: ScanResult<ProcesoEducativo>[] = [];
+    for (const p of procesoEducativo) {
+        if (p.data.tipo === "Clase de Niños") clases.push(p);
+    }
+    const gpj: ScanResult<ProcesoEducativo>[] = [];
+    for (const p of procesoEducativo) {
+        if (p.data.tipo === "GPJ") gpj.push(p);
+    }
+    const ce: ScanResult<ProcesoEducativo>[] = [];
+    for (const p of procesoEducativo) {
+        if (p.data.tipo === "Círculo de Estudio") ce.push(p);
+    }
 
     const kpis: [string, string][] = [
         ["Visitas realizadas", String(totalV)],
@@ -59,36 +90,84 @@ export function generateInforme(
     md += section("🏘️ Por Sector");
     const sortedSectors: string[] = [...sectores].sort();
     for (const s of sortedSectors) {
-        const sv = visitas.filter((v: ScanResult<Visita>) => v.data.sector === s);
-        const svc = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.sector === s);
-        const spe = procesoEducativo.filter((p: ScanResult<ProcesoEducativo>) => p.data.sector === s);
-        const spF19 = svc.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Fiesta de 19 días");
-        const spDS = svc.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Día Sagrado");
-        const spOtras = svc.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad !== "Fiesta de 19 días" && v.data.tipo_actividad !== "Día Sagrado");
-        const spClases = spe.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "Clase de Niños");
+        const sv: ScanResult<Visita>[] = [];
+        for (const v of visitas) {
+            if (v.data.sector === s) sv.push(v);
+        }
+        const svc: ScanResult<VidaComunitaria>[] = [];
+        for (const v of vidaComunitaria) {
+            if (v.data.sector === s) svc.push(v);
+        }
+        const spe: ScanResult<ProcesoEducativo>[] = [];
+        for (const p of procesoEducativo) {
+            if (p.data.sector === s) spe.push(p);
+        }
+        const spF19: ScanResult<VidaComunitaria>[] = [];
+        for (const v of svc) {
+            if (v.data.tipo_actividad === "Fiesta de 19 días") spF19.push(v);
+        }
+        const spDS: ScanResult<VidaComunitaria>[] = [];
+        for (const v of svc) {
+            if (v.data.tipo_actividad === "Día Sagrado") spDS.push(v);
+        }
+        const spOtras: ScanResult<VidaComunitaria>[] = [];
+        for (const v of svc) {
+            if (v.data.tipo_actividad !== "Fiesta de 19 días" && v.data.tipo_actividad !== "Día Sagrado") spOtras.push(v);
+        }
+        const spClases: ScanResult<ProcesoEducativo>[] = [];
+        for (const p of spe) {
+            if (p.data.tipo === "Clase de Niños") spClases.push(p);
+        }
 
         md += `### ${s}\n`;
-        const svPersonas: string[] = sv.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados);
-        const svMaestros: string[] = sv.flatMap((v: ScanResult<Visita>) => v.data.maestros);
-        md += `- **Visitas:** ${sv.length} | ${new Set(svPersonas).size} personas`;
-        md += ` | ${new Set(svMaestros).size} maestros`;
+        const svPersonasSet = new Set<string>();
+        for (const v of sv) {
+            for (const n of v.data.nombres_visitados) {
+                svPersonasSet.add(n);
+            }
+        }
+        const svMaestrosSet = new Set<string>();
+        for (const v of sv) {
+            for (const m of v.data.maestros) {
+                svMaestrosSet.add(m);
+            }
+        }
+        md += `- **Visitas:** ${sv.length} | ${svPersonasSet.size} personas`;
+        md += ` | ${svMaestrosSet.size} maestros`;
         md += ` | ${sv.length > 0 ? estimarHogares(sv) : 0} hogares\n`;
 
         const vcParts: string[] = [];
-        const totalPartF19: number = spF19.reduce((a: number, v: ScanResult<VidaComunitaria>) => a + (v.data.numero_participantes || 0), 0);
+        let totalPartF19 = 0;
+        for (const v of spF19) {
+            totalPartF19 += v.data.numero_participantes || 0;
+        }
         if (spF19.length > 0) vcParts.push(`${spF19.length} F19D (${totalPartF19} part.)`);
-        const totalPartDS: number = spDS.reduce((a: number, v: ScanResult<VidaComunitaria>) => a + (v.data.numero_participantes || 0), 0);
+        let totalPartDS = 0;
+        for (const v of spDS) {
+            totalPartDS += v.data.numero_participantes || 0;
+        }
         if (spDS.length > 0) vcParts.push(`${spDS.length} Días Sagrados (${totalPartDS} part.)`);
         if (spOtras.length > 0) vcParts.push(`${spOtras.length} Otra(s)`);
         if (vcParts.length > 0) md += `- **Vida Comunitaria:** ${vcParts.join(" · ")}\n`;
 
         if (spClases.length > 0) {
-            const nombres: string[] = spClases.flatMap((p: ScanResult<ProcesoEducativo>) => p.data.participantes || []);
-            md += `- **Proceso Educativo:** ${spClases.length} Clase(s) de Niños (${new Set(nombres).size} part.)\n`;
+            const spClasesNombresSet = new Set<string>();
+            for (const p of spClases) {
+                for (const n of (p.data.participantes || [])) {
+                    spClasesNombresSet.add(n);
+                }
+            }
+            md += `- **Proceso Educativo:** ${spClases.length} Clase(s) de Niños (${spClasesNombresSet.size} part.)\n`;
         }
 
-        const speGPJ = spe.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "GPJ");
-        const speCE = spe.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "Círculo de Estudio");
+        const speGPJ: ScanResult<ProcesoEducativo>[] = [];
+        for (const p of spe) {
+            if (p.data.tipo === "GPJ") speGPJ.push(p);
+        }
+        const speCE: ScanResult<ProcesoEducativo>[] = [];
+        for (const p of spe) {
+            if (p.data.tipo === "Círculo de Estudio") speCE.push(p);
+        }
         if (speGPJ.length > 0) md += `- **GPJ:** ${speGPJ.length} activo(s)\n`;
         if (speCE.length > 0) md += `- **CE:** ${speCE.length} activo(s)\n`;
     }
@@ -99,7 +178,8 @@ export function generateInforme(
         md += section("🎉 Actividades Destacadas");
         if (f19.length > 0) {
             md += "**Fiestas de 19 días:**\n";
-            const f19Sorted: ScanResult<VidaComunitaria>[] = f19.sort((a: ScanResult<VidaComunitaria>, b: ScanResult<VidaComunitaria>) => (a.data.fecha || "").localeCompare(b.data.fecha || ""));
+            const f19Sorted = [...f19];
+            f19Sorted.sort((a: ScanResult<VidaComunitaria>, b: ScanResult<VidaComunitaria>) => (a.data.fecha || "").localeCompare(b.data.fecha || ""));
             for (const v of f19Sorted) {
                 md += `- ${String(v.data.fecha || "").slice(0, 5)} — ${String(v.data.nombre_evento || "")}`;
                 md += ` (${String(v.data.sector || "")}, ${v.data.numero_participantes || 0} part.)\n`;
@@ -107,7 +187,8 @@ export function generateInforme(
         }
         if (ds.length > 0) {
             md += "\n**Días Sagrados:**\n";
-            const dsSorted: ScanResult<VidaComunitaria>[] = ds.sort((a: ScanResult<VidaComunitaria>, b: ScanResult<VidaComunitaria>) => (a.data.fecha || "").localeCompare(b.data.fecha || ""));
+            const dsSorted = [...ds];
+            dsSorted.sort((a: ScanResult<VidaComunitaria>, b: ScanResult<VidaComunitaria>) => (a.data.fecha || "").localeCompare(b.data.fecha || ""));
             for (const v of dsSorted) {
                 md += `- ${String(v.data.fecha || "").slice(0, 5)} — ${String(v.data.nombre_evento || "")}`;
                 md += ` (${String(v.data.sector || "")}, ${v.data.numero_participantes || 0} part.)\n`;
@@ -138,20 +219,41 @@ export function generateInforme(
     }
 
     // ── Campaña ──
-    const enCamp = visitas.filter((v: ScanResult<Visita>) => v.data.campana_expansion === true);
+    const enCamp: ScanResult<Visita>[] = [];
+    for (const v of visitas) {
+        if (v.data.campana_expansion === true) enCamp.push(v);
+    }
     if (enCamp.length > 0) {
         md += section("📱 Campaña de Expansión");
-        const enCampNombres: string[] = enCamp.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados);
-        const alcanzadas = new Set(enCampNombres).size;
-        const nuevos = enCamp.filter((v: ScanResult<Visita>) => v.data.hogar_nuevo === true).length;
-        const bahais = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Bahá'í").length;
-        const simp = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Simpatizante").length;
-        const campMaestros: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros);
-        const mSet = new Set(campMaestros);
+        const enCampNombresSet = new Set<string>();
+        for (const v of enCamp) {
+            for (const n of v.data.nombres_visitados) {
+                enCampNombresSet.add(n);
+            }
+        }
+        const alcanzadas = enCampNombresSet.size;
+        let nuevos = 0;
+        for (const v of enCamp) {
+            if (v.data.hogar_nuevo === true) nuevos++;
+        }
+        let bahais = 0;
+        for (const v of visitas) {
+            if (v.data.condicion === "Bahá'í") bahais++;
+        }
+        let simp = 0;
+        for (const v of visitas) {
+            if (v.data.condicion === "Simpatizante") simp++;
+        }
+        const campMaestrosSet = new Set<string>();
+        for (const v of visitas) {
+            for (const m of v.data.maestros) {
+                campMaestrosSet.add(m);
+            }
+        }
         const totalV = visitas.length;
         const hog = totalV > 0 ? estimarHogares(visitas) : 0;
         md += `- Personas alcanzadas: ${alcanzadas}\n`;
-        md += `- Maestros únicos: ${mSet.size}\n`;
+        md += `- Maestros únicos: ${campMaestrosSet.size}\n`;
         md += `- Hogares nuevos: ${nuevos}\n`;
         md += `- Bahá'ís: ${bahais} · Simpatizantes: ${simp}\n`;
         md += `- Total de visitas: ${totalV}\n`;

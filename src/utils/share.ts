@@ -71,10 +71,18 @@ export function formatVisitasExport(
 ): string {
     let text = `📊 *${title}*\n${subtitle}\n`;
     text += `${records.length} visitas`;
-    const todosNombres: string[] = records.flatMap(r => ((r as VisitaExportEntry).nombres_visitados) || []);
+    const todosNombres: string[] = [];
+    for (const r of records) {
+        const arr = ((r as VisitaExportEntry).nombres_visitados) || [];
+        for (const n of arr) { todosNombres.push(n); }
+    }
     const personas = new Set(todosNombres).size;
     text += ` | ${personas} personas`;
-    const todosMaestros: string[] = records.flatMap(r => ((r as VisitaExportEntry).maestros) || []);
+    const todosMaestros: string[] = [];
+    for (const r of records) {
+        const arr = ((r as VisitaExportEntry).maestros) || [];
+        for (const m of arr) { todosMaestros.push(m); }
+    }
     const allMaestros = new Set(todosMaestros).size;
     text += ` | ${allMaestros} maestros\n`;
 
@@ -116,7 +124,10 @@ export function formatActividadesExport(
 ): string {
     let text = `📊 *${title}*\n${subtitle}\n`;
     text += `${records.length} actividades`;
-    const totalP = records.reduce((a, r) => a + (Number((r as ActividadExportEntry).numero_participantes) || 0), 0);
+    let totalP = 0;
+    for (const r of records) {
+        totalP += Number((r as ActividadExportEntry).numero_participantes) || 0;
+    }
     text += ` | ${totalP} participantes\n\n`;
     for (const r of records) {
         const v = r as ActividadExportEntry;

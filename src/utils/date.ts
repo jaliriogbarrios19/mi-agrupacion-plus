@@ -1,6 +1,6 @@
 export function formatDate(date: Date): string {
-    const dayNum: string = String(date.getDate());
-    const monNum: string = String(date.getMonth() + 1);
+    const dayNum = date.getDate().toString();
+    const monNum = (date.getMonth() + 1).toString();
     const d = dayNum.padStart(2, "0");
     const m = monNum.padStart(2, "0");
     const y = date.getFullYear();
