@@ -327,7 +327,12 @@ export async function checkUserApproval(): Promise<boolean> {
         const user = await getCurrentUser();
         if (!user) return false;
         const rows = await restGet<{ approved: boolean }>("profiles", { user_id: `eq.${user.id}`, select: "approved" });
-        const approved = rows.length > 0 && rows[0].approved;
+        if (rows.length === 0) {
+            await restUpsert("profiles", { user_id: user.id, approved: true }, "user_id");
+            approvalCache = { approved: true, checkedAt: Date.now() };
+            return true;
+        }
+        const approved = rows[0].approved;
         approvalCache = { approved, checkedAt: Date.now() };
         return approved;
     } catch {
