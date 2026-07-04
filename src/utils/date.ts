@@ -1,8 +1,8 @@
 export function formatDate(date: Date): string {
-    const dayStr = String(date.getDate());
-    const monStr = String(date.getMonth() + 1);
-    const d = dayStr.padStart(2, "0");
-    const m = monStr.padStart(2, "0");
+    const dayNum: string = String(date.getDate());
+    const monNum: string = String(date.getMonth() + 1);
+    const d = dayNum.padStart(2, "0");
+    const m = monNum.padStart(2, "0");
     const y = date.getFullYear();
     return `${d}/${m}/${y}`;
 }

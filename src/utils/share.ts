@@ -71,9 +71,11 @@ export function formatVisitasExport(
 ): string {
     let text = `📊 *${title}*\n${subtitle}\n`;
     text += `${records.length} visitas`;
-    const personas = new Set(records.flatMap(r => ((r as VisitaExportEntry).nombres_visitados) || [])).size;
+    const todosNombres: string[] = records.flatMap(r => ((r as VisitaExportEntry).nombres_visitados) || []);
+    const personas = new Set(todosNombres).size;
     text += ` | ${personas} personas`;
-    const allMaestros = new Set(records.flatMap(r => ((r as VisitaExportEntry).maestros) || [])).size;
+    const todosMaestros: string[] = records.flatMap(r => ((r as VisitaExportEntry).maestros) || []);
+    const allMaestros = new Set(todosMaestros).size;
     text += ` | ${allMaestros} maestros\n`;
 
     const groups = new Map<string, { maestros: string; visitas: Record<string, unknown>[] }>();

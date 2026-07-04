@@ -20,13 +20,16 @@ export function renderGeneralKPIs(
     onDeleted?: () => void,
 ): void {
     const totalV = visitas.length;
-    const personas = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados)).size;
+    const visitadosFlat: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados);
+    const personas = new Set(visitadosFlat).size;
     const hogares = totalV > 0 ? estimarHogares(visitas) : 0;
-    const maestrosSet = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros));
+    const maestrosFlat: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros);
+    const maestrosSet = new Set(maestrosFlat);
     const fiestas = vc.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Fiesta de 19 días");
     const sagrados = vc.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Día Sagrado");
     const otras = vc.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad !== "Fiesta de 19 días" && v.data.tipo_actividad !== "Día Sagrado");
-    const participantesUnicos = new Set(fiestas.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
+    const f19PartFlat: string[] = fiestas.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]);
+    const participantesUnicos = new Set(f19PartFlat);
     const tc = <T extends ScanResult<Visita | VidaComunitaria | ProcesoEducativo | Reunion>>(d: T[]) =>
         d.map(r => ({ file: r.file, data: r.data as unknown as Record<string, unknown> }));
     const modalOpts = dataManager ? { dataManager, onDeleted } : {};
@@ -41,7 +44,8 @@ export function renderGeneralKPIs(
         new PersonListModal(app, "Participantes en Fiestas de 19 días", [...participantesUnicos].sort()).open());
     kpi(grid, "Programa Educativo", String(pe.length), () => new RecordListModal(app, "Programa Educativo", tc(pe), (f) => openEditModal(f, "pe"), modalOpts.dataManager, modalOpts.onDeleted).open());
     kpi(grid, "Reuniones", String(reuniones.length), () => new RecordListModal(app, "Reuniones", tc(reuniones), (f) => openEditModal(f, "reunion"), modalOpts.dataManager, modalOpts.onDeleted).open());
-    const asistentesReuniones = new Set(reuniones.flatMap((r: ScanResult<Reunion>) => r.data.asist_bahais));
+    const asistReunionesFlat: string[] = reuniones.flatMap((r: ScanResult<Reunion>) => r.data.asist_bahais);
+    const asistentesReuniones = new Set(asistReunionesFlat);
     kpi(grid, "Asistentes a reuniones", String(asistentesReuniones.size), () =>
         new PersonListModal(app, "Asistentes a reuniones", [...asistentesReuniones].sort()).open());
     kpi(grid, "Ingresos", String(declaraciones.length), () =>
@@ -54,13 +58,15 @@ export function renderSRPVisitas(container: HTMLElement, visitas: ScanResult<Vis
     h.setName("Visitas");
     h.setHeading();
     const total = visitas.length;
-    const per = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados)).size;
+    const visitadosSRPFlat: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados);
+    const per = new Set(visitadosSRPFlat).size;
     const hog = total > 0 ? estimarHogares(visitas) : 0;
     const simp = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Simpatizante").length;
     const nuevos = visitas.filter((v: ScanResult<Visita>) => v.data.hogar_nuevo === true).length;
     const dev = visitas.filter((v: ScanResult<Visita>) => v.data.hubo_oracion === true).length;
     const camp = visitas.filter((v: ScanResult<Visita>) => v.data.campana_expansion === true).length;
-    const mSet = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros));
+    const mFlat: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros);
+    const mSet = new Set(mFlat);
     for (const l of [
         `Total de visitas: ${total}`, `Personas visitadas: ${per}`,
         `~Hogares visitados: ${hog}`, `Visitas a simpatizantes: ${simp}`,

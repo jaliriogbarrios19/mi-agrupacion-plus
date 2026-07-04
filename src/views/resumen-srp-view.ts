@@ -87,13 +87,15 @@ export class ResumenSRPView extends ItemView {
         const section = container.createDiv({ cls: "mi-agrupacion-section" });
         new Setting(section).setName("Visitas").setHeading();
         const total = visitas.length;
-        const per = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados)).size;
+        const visitadosFlat: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados);
+        const per = new Set(visitadosFlat).size;
         const hog = total > 0 ? estimarHogares(visitas) : 0;
         const simp = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Simpatizante").length;
         const nuevos = visitas.filter((v: ScanResult<Visita>) => v.data.hogar_nuevo === true).length;
         const dev = visitas.filter((v: ScanResult<Visita>) => v.data.hubo_oracion === true).length;
         const camp = visitas.filter((v: ScanResult<Visita>) => v.data.campana_expansion === true).length;
-        const mSet = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros));
+        const mFlat: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros);
+        const mSet = new Set(mFlat);
         for (const l of [
             `Total de visitas: ${total}`, `Personas visitadas: ${per}`,
             `~Hogares visitados: ${hog}`, `Visitas a simpatizantes: ${simp}`,
@@ -110,8 +112,10 @@ export class ResumenSRPView extends ItemView {
         const ot = vida.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad !== "Fiesta de 19 días" && v.data.tipo_actividad !== "Día Sagrado");
         const af = f19.reduce((acc: number, v: ScanResult<VidaComunitaria>) => acc + (v.data.numero_participantes || 0), 0);
         const ad = ds.reduce((acc: number, v: ScanResult<VidaComunitaria>) => acc + (v.data.numero_participantes || 0), 0);
-        const uf19 = new Set(f19.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
-        const uds = new Set(ds.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
+        const f19Flat: string[] = f19.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]);
+        const uf19 = new Set(f19Flat);
+        const dsFlat: string[] = ds.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]);
+        const uds = new Set(dsFlat);
         for (const l of [
             `Fiestas de 19 días: ${f19.length} (Asistencia: ${af})`,
             `  Participantes únicos: ${uf19.size}`,

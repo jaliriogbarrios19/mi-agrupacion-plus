@@ -41,7 +41,8 @@ function buildCampanaBars(
     metas?: CicloMetas,
 ): BarGroup {
     const enCamp = visitas.filter((v: ScanResult<Visita>) => v.data.campana_expansion === true);
-    const maestros = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros));
+    const allMaestros: string[] = visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros);
+    const maestros = new Set(allMaestros);
     const hog = visitas.length > 0 ? estimarHogares(visitas) : 0;
 
     return {
@@ -117,7 +118,8 @@ export function computeCycleChartData(
     const ds = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Día Sagrado");
     if (ds.length > 0) {
         const dsAsist = ds.reduce((acc: number, v: ScanResult<VidaComunitaria>) => acc + (v.data.numero_participantes || 0), 0);
-        const dsUnicos = new Set(ds.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
+        const dsFlat: string[] = ds.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]);
+        const dsUnicos = new Set(dsFlat);
         barGroups.push({
             title: "Días Sagrados",
             bars: [
@@ -131,7 +133,8 @@ export function computeCycleChartData(
     const f19 = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Fiesta de 19 días");
     if (f19.length > 0) {
         const fAsist = f19.reduce((acc: number, v: ScanResult<VidaComunitaria>) => acc + (v.data.numero_participantes || 0), 0);
-        const uf19 = new Set(f19.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
+        const f19Flat: string[] = f19.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]);
+        const uf19 = new Set(f19Flat);
         barGroups.push({
             title: "Fiesta de 19 Días",
             bars: [
