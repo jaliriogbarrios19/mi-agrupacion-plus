@@ -17,12 +17,6 @@ import {
     renderCicloSelector, renderSectorSelector, renderSearchInput,
     matchesSearch, sortByDateDesc, kpi,
 } from "./report-utils";
-import {
-    cleanupCharts,
-    renderAllCharts,
-    renderChartToggle,
-} from "./chart-utils";
-import { computeCycleChartData } from "./chart-data";
 
 export class GeneralView extends ItemView {
     private settings: MiAgrupacionSettings;
@@ -51,7 +45,6 @@ export class GeneralView extends ItemView {
     async render(): Promise<void> {
         if (this.searchCleanup) { this.searchCleanup(); this.searchCleanup = null; }
         const { contentEl } = this;
-        cleanupCharts(contentEl);
         contentEl.empty();
         contentEl.addClass("mi-agrupacion-view");
         const backBtn = contentEl.createEl("button", { text: "← Dashboard", cls: "mi-agrupacion-dash-btn" });
@@ -189,19 +182,10 @@ export class GeneralView extends ItemView {
         for (const r of declaraciones) { declEntries.push({ file: r.file, data: r.data as unknown as Record<string, unknown> }); }
         kpi(grid, "Ingresos", String(declaraciones.length), () =>
             new RecordListModal(this.app, "Ingresos", declEntries, (f) => this.openEditModal(f, "declaracion"), this.dataManager, onDeleted).open());
-
-        renderChartToggle(contentEl, "gráficos", this.chartExpanded, () => { this.chartExpanded = !this.chartExpanded; void this.render(); });
-        if (!this.chartExpanded) return;
-
-        const metas = this.settings.metasCiclo[this.currentCiclo.ciclo];
-        const section = contentEl.createDiv({ cls: "mi-agrupacion-chart-section" });
-
-        const chartData = computeCycleChartData(visitas, vidaComunitaria, procesoEducativo, metas);
-        renderAllCharts(section, chartData, contentEl);
     }
 
     updateSettings(settings: MiAgrupacionSettings): void { this.settings = settings; }
-    async onClose(): Promise<void> { cleanupCharts(this.contentEl); this.contentEl.empty(); }
+    async onClose(): Promise<void> { this.contentEl.empty(); }
 
     private openEditModal(file: TFile, kind: "visita" | "vc" | "pe" | "reunion" | "declaracion"): void {
         const onSaved = () => { void this.render(); };

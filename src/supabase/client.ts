@@ -118,14 +118,14 @@ export async function api(
     if (body !== undefined) {
         params.body = JSON.stringify(body);
     }
+
     try {
         const res = await requestUrl(params);
         return { status: res.status, json: res.json };
     } catch (e) {
-        const msg = String(e);
-        // requestUrl throws for non-2xx; extract status and body from the error
-        const statusMatch = msg.match(/status[:\s]*(\d{3})/);
-        const status = statusMatch ? parseInt(statusMatch[1], 10) : 0;
+        const err = e as Record<string, unknown> | undefined;
+        const status = typeof err?.status === "number" ? err.status : 0;
+        const json = err?.json ?? { error: String(e) };
 
         if (status === 401 && accessToken && !sessionExpired) {
             const refreshed = await refreshSession();
@@ -135,15 +135,15 @@ export async function api(
                     const retry = await requestUrl(params);
                     return { status: retry.status, json: retry.json };
                 } catch (retryErr) {
-                    const retryMsg = String(retryErr);
-                    const retryStatus = retryMsg.match(/status[:\s]*(\d{3})/)?.[1];
-                    return { status: parseInt(retryStatus || "0", 10), json: { error: retryMsg } };
+                    const rObj = retryErr as Record<string, unknown> | undefined;
+                    const rStatus = typeof rObj?.status === "number" ? rObj.status : 0;
+                    return { status: rStatus, json: rObj?.json ?? { error: String(retryErr) } };
                 }
             }
             markSessionExpired();
         }
 
-        return { status, json: { error: msg } };
+        return { status, json };
     }
 }
 
@@ -264,7 +264,7 @@ export async function restUpsert<T>(table: string, body: T, onConflict: string):
     try {
         const res = await api("POST", `/rest/v1/${table}?on_conflict=${onConflict}`, body, { "Prefer": "resolution=merge-duplicates" });
         if (res.status < 200 || res.status >= 300) {
-            console.warn(`Mi Agrupacion Plus — restUpsert ${table} failed:`, res.status, JSON.stringify(res.json));
+            console.warn(`Mi Agrupacion Plus — restUpsert ${table} failed:`, res.status);
         }
         return res.status >= 200 && res.status < 300;
     } catch (e) {
@@ -272,6 +272,24 @@ export async function restUpsert<T>(table: string, body: T, onConflict: string):
         console.warn(`Mi Agrupacion Plus — restUpsert ${table} error:`, msg);
         return false;
     }
+}
+
+export async function restInsertOrUpdate(
+    table: string,
+    body: Record<string, unknown>,
+    matchParams: Record<string, string>,
+): Promise<boolean> {
+    const query = new URLSearchParams(matchParams).toString();
+    const existing = await api("GET", `/rest/v1/${table}?${query}&limit=1`);
+    if (existing.status >= 200 && existing.status < 300) {
+        const rows = (existing.json as unknown[]) || [];
+        if (rows.length > 0) {
+            const res = await api("PATCH", `/rest/v1/${table}?${query}`, body);
+            return res.status >= 200 && res.status < 300;
+        }
+    }
+    const res = await api("POST", `/rest/v1/${table}`, body);
+    return res.status >= 200 && res.status < 300;
 }
 
 export async function restDelete(table: string, params: Record<string, string>): Promise<boolean> {

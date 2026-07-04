@@ -71,34 +71,6 @@ export interface Declaracion {
     reportado_por: string;
 }
 
-export interface CicloMetasCampana {
-    maestrosParticipantes: number;
-    numeroVisitas: number;
-    numeroHogares: number;
-    bahais: number;
-    hogaresNuevos: number;
-    simpatizantes: number;
-}
-
-export interface CicloMetasProcesoEducativo {
-    clasesNinos: number;
-    gpj: number;
-    circulosEstudio: number;
-}
-
-export interface CicloMetasActividad {
-    participacionTotal: number;
-    participantesUnicos: number;
-    cantidadActividades: number;
-}
-
-export interface CicloMetas {
-    campana: CicloMetasCampana;
-    procesoEducativo: CicloMetasProcesoEducativo;
-    diasSagrados: CicloMetasActividad;
-    fiesta19Dias: CicloMetasActividad;
-}
-
 export interface MiAgrupacionSettings {
     nombreAgrupacion: string;
     carpetaBase: string;
@@ -111,7 +83,6 @@ export interface MiAgrupacionSettings {
     authRefreshToken: string;
     lastSeenVersion: string;
     setupMode: "admin" | "auxiliar" | "";
-    metasCiclo: Record<string, CicloMetas>;
 }
 
 export const DEFAULT_SECTORES = ["General"];
@@ -128,7 +99,6 @@ export const DEFAULT_SETTINGS: MiAgrupacionSettings = {
     authRefreshToken: "",
     lastSeenVersion: "",
     setupMode: "",
-    metasCiclo: {},
 };
 
 export const CICLOS = [

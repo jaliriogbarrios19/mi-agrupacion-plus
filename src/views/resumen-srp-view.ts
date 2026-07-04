@@ -7,12 +7,6 @@ import { detectarCiclo, type CicloInfo } from "../utils/ciclo";
 import { estimarHogares } from "../utils/hogares";
 import { parseDate } from "../utils/date";
 import { renderCicloSelector, renderSearchInput, matchesSearch, sortByDateDesc } from "./report-utils";
-import {
-    cleanupCharts,
-    renderAllCharts,
-    renderChartToggle,
-} from "./chart-utils";
-import { computeCycleChartData } from "./chart-data";
 
 export class ResumenSRPView extends ItemView {
     private settings: MiAgrupacionSettings;
@@ -41,7 +35,6 @@ export class ResumenSRPView extends ItemView {
     async render(): Promise<void> {
         if (this.searchCleanup) { this.searchCleanup(); this.searchCleanup = null; }
         const { contentEl } = this;
-        cleanupCharts(contentEl);
         contentEl.empty();
         contentEl.addClass("mi-agrupacion-view");
         const backBtn = contentEl.createEl("button", { text: "← Dashboard", cls: "mi-agrupacion-dash-btn" });
@@ -81,14 +74,6 @@ export class ResumenSRPView extends ItemView {
         this.renderVisitas(contentEl, visitas);
         this.renderVC(contentEl, vidaComunitaria);
         this.renderIngresos(contentEl, declaraciones);
-
-        renderChartToggle(contentEl, "gráficos", this.chartExpanded, () => { this.chartExpanded = !this.chartExpanded; void this.render(); });
-        if (!this.chartExpanded) return;
-
-        const metas = this.settings.metasCiclo[this.currentCiclo.ciclo];
-        const chartSection = contentEl.createDiv({ cls: "mi-agrupacion-chart-section" });
-        const chartData = computeCycleChartData(visitas, vidaComunitaria, procesoEducativo, metas);
-        renderAllCharts(chartSection, chartData, contentEl);
     }
 
     private renderVisitas(container: HTMLElement, visitas: ScanResult<Visita>[]): void {
@@ -179,7 +164,7 @@ export class ResumenSRPView extends ItemView {
     }
 
     updateSettings(settings: MiAgrupacionSettings): void { this.settings = settings; }
-    async onClose(): Promise<void> { cleanupCharts(this.contentEl); this.contentEl.empty(); }
+    async onClose(): Promise<void> { this.contentEl.empty(); }
 
     private renderIngresos(container: HTMLElement, declaraciones: ScanResult<Declaracion>[]): void {
         if (declaraciones.length === 0) return;

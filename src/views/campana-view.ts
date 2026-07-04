@@ -8,10 +8,6 @@ import { estimarHogares } from "../utils/hogares";
 import {
     renderCicloSelector, renderSearchInput, matchesSearch, sortByDateDesc
 } from "./report-utils";
-import {
-    cleanupCharts, renderBarChart, renderChartToggle,
-} from "./chart-utils";
-import { computeCampanaChartData } from "./chart-data";
 
 export class CampanaView extends ItemView {
     private settings: MiAgrupacionSettings;
@@ -40,7 +36,6 @@ export class CampanaView extends ItemView {
     async render(): Promise<void> {
         if (this.searchCleanup) { this.searchCleanup(); this.searchCleanup = null; }
         const { contentEl } = this;
-        cleanupCharts(contentEl);
         contentEl.empty();
         contentEl.addClass("mi-agrupacion-view");
         const backBtn = contentEl.createEl("button", { text: "← Dashboard", cls: "mi-agrupacion-dash-btn" });
@@ -104,16 +99,8 @@ export class CampanaView extends ItemView {
             `Simpatizantes: ${simp}`, `Total de visitas: ${totalV}`,
             `~Hogares visitados: ${hog}`,
         ]) g.createEl("p", { text: l, cls: "mi-agrupacion-stat" });
-
-        renderChartToggle(contentEl, "gráficos", this.chartExpanded, () => { this.chartExpanded = !this.chartExpanded; void this.render(); });
-        if (!this.chartExpanded) return;
-
-        const metas = this.settings.metasCiclo[this.currentCiclo.ciclo];
-        const chartSection = contentEl.createDiv({ cls: "mi-agrupacion-chart-section" });
-        const group = computeCampanaChartData(visitas, metas);
-        renderBarChart(chartSection, group.bars, group.title, contentEl);
     }
 
     updateSettings(settings: MiAgrupacionSettings): void { this.settings = settings; }
-    async onClose(): Promise<void> { cleanupCharts(this.contentEl); this.contentEl.empty(); }
+    async onClose(): Promise<void> { this.contentEl.empty(); }
 }

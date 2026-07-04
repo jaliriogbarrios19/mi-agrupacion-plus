@@ -8,12 +8,6 @@ import { DeclaracionModal } from "../modals/declaracion-modal";
 import { parseDate } from "../utils/date";
 import { type CicloInfo, detectarCiclo } from "../utils/ciclo";
 import { withContextMenu } from "./report-utils";
-import {
-    cleanupCharts,
-    renderAllCharts,
-    renderChartToggle,
-} from "./chart-utils";
-import { computeCycleChartData } from "./chart-data";
 
 export class DashboardView extends ItemView {
     private settings: MiAgrupacionSettings;
@@ -60,7 +54,6 @@ export class DashboardView extends ItemView {
 
     async render(): Promise<void> {
         const { contentEl } = this;
-        cleanupCharts(contentEl);
         contentEl.empty();
         contentEl.addClass("mi-agrupacion-dashboard");
         this.renderHome(contentEl);
@@ -91,11 +84,6 @@ export class DashboardView extends ItemView {
         informeBtn.addEventListener("click", () => { void this.generarInforme(); });
 
         void this.renderIngresosHome(container);
-
-        renderChartToggle(container, "gráficos", this.chartExpanded, () => { this.chartExpanded = !this.chartExpanded; void this.render(); });
-        if (this.chartExpanded) {
-            void this.renderChartsHome(container);
-        }
     }
 
     private reportBtn(container: HTMLElement, text: string, viewType: string): void {
@@ -109,20 +97,6 @@ export class DashboardView extends ItemView {
         const btn = container.createEl("button", { cls: "mi-agrupacion-dash-btn" });
         btn.createSpan({ text });
         btn.addEventListener("click", onClick);
-    }
-
-    private async renderChartsHome(container: HTMLElement): Promise<void> {
-        try {
-            const data = await this.dataManager.scanAllRecordsInCycle(this.currentCiclo.anioEtiqueta, this.currentCiclo.ciclo);
-            const { visitas, vidaComunitaria, procesoEducativo } = data;
-            const metas = this.settings.metasCiclo[this.currentCiclo.ciclo];
-            const section = container.createDiv({ cls: "mi-agrupacion-chart-section" });
-
-            const chartData = computeCycleChartData(visitas, vidaComunitaria, procesoEducativo, metas);
-            renderAllCharts(section, chartData, container);
-        } catch {
-            container.createEl("p", { text: "Error al cargar datos para gráficos.", cls: "mi-agrupacion-stat" });
-        }
     }
 
     private openDeclaracion(): void {
@@ -178,5 +152,5 @@ export class DashboardView extends ItemView {
     }
 
     updateSettings(settings: MiAgrupacionSettings): void { this.settings = settings; }
-    async onClose(): Promise<void> { cleanupCharts(this.contentEl); this.contentEl.empty(); }
+    async onClose(): Promise<void> { this.contentEl.empty(); }
 }
