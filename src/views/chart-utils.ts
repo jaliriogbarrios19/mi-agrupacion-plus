@@ -46,7 +46,7 @@ export interface TrendSeries {
 const chartCleanups = new WeakMap<HTMLElement, Map<string, () => void>>();
 
 function getThemeColors(): Record<string, string> {
-    const s = getComputedStyle(document.body);
+    const s = getComputedStyle(activeDocument.body);
     return {
         accent: s.getPropertyValue("--text-accent").trim() || "#6c8ccf",
         muted: s.getPropertyValue("--text-muted").trim() || "#87939d",

@@ -40,8 +40,8 @@ function buildCampanaBars(
     visitas: ScanResult<Visita>[],
     metas?: CicloMetas,
 ): BarGroup {
-    const enCamp = visitas.filter(v => v.data.campana_expansion === true);
-    const maestros = new Set(visitas.flatMap(v => v.data.maestros));
+    const enCamp = visitas.filter((v: ScanResult<Visita>) => v.data.campana_expansion === true);
+    const maestros = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros));
     const hog = visitas.length > 0 ? estimarHogares(visitas) : 0;
 
     return {
@@ -50,9 +50,9 @@ function buildCampanaBars(
             { label: "Maestros participantes", actual: maestros.size, goal: metas?.campana?.maestrosParticipantes ?? 0 },
             { label: "Número de visitas", actual: visitas.length, goal: metas?.campana?.numeroVisitas ?? 0 },
             { label: "Número de hogares", actual: hog, goal: metas?.campana?.numeroHogares ?? 0 },
-            { label: "Bahá'ís", actual: visitas.filter(v => v.data.condicion === "Bahá'í").length, goal: metas?.campana?.bahais ?? 0 },
-            { label: "Hogares nuevos", actual: enCamp.filter(v => v.data.hogar_nuevo === true).length, goal: metas?.campana?.hogaresNuevos ?? 0 },
-            { label: "Simpatizantes", actual: visitas.filter(v => v.data.condicion === "Simpatizante").length, goal: metas?.campana?.simpatizantes ?? 0 },
+            { label: "Bahá'ís", actual: visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Bahá'í").length, goal: metas?.campana?.bahais ?? 0 },
+            { label: "Hogares nuevos", actual: enCamp.filter((v: ScanResult<Visita>) => v.data.hogar_nuevo === true).length, goal: metas?.campana?.hogaresNuevos ?? 0 },
+            { label: "Simpatizantes", actual: visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Simpatizante").length, goal: metas?.campana?.simpatizantes ?? 0 },
         ],
     };
 }
@@ -96,28 +96,28 @@ export function computeCycleChartData(
 
     // --- Bar groups ---
 
-    const hasCampanaData = visitas.some(v => v.data.campana_expansion === true);
+    const hasCampanaData = visitas.some((v: ScanResult<Visita>) => v.data.campana_expansion === true);
     if (hasCampanaData || visitas.length > 0) {
         barGroups.push(buildCampanaBars(visitas, metas));
     }
 
     const hasPEData = procesoEducativo.length > 0;
     if (hasPEData) {
-        const clases = procesoEducativo.filter(p => p.data.tipo === "Clase de Niños");
+        const clases = procesoEducativo.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "Clase de Niños");
         barGroups.push({
             title: "Proceso Educativo",
             bars: [
                 { label: "Clases de niños", actual: clases.length, goal: metas?.procesoEducativo?.clasesNinos ?? 0 },
-                { label: "GPJ", actual: procesoEducativo.filter(p => p.data.tipo === "GPJ").length, goal: metas?.procesoEducativo?.gpj ?? 0 },
-                { label: "Círculos de estudio", actual: procesoEducativo.filter(p => p.data.tipo === "Círculo de Estudio").length, goal: metas?.procesoEducativo?.circulosEstudio ?? 0 },
+                { label: "GPJ", actual: procesoEducativo.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "GPJ").length, goal: metas?.procesoEducativo?.gpj ?? 0 },
+                { label: "Círculos de estudio", actual: procesoEducativo.filter((p: ScanResult<ProcesoEducativo>) => p.data.tipo === "Círculo de Estudio").length, goal: metas?.procesoEducativo?.circulosEstudio ?? 0 },
             ],
         });
     }
 
-    const ds = vidaComunitaria.filter(v => v.data.tipo_actividad === "Día Sagrado");
+    const ds = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Día Sagrado");
     if (ds.length > 0) {
-        const dsAsist = ds.reduce((acc, v) => acc + (v.data.numero_participantes || 0), 0);
-        const dsUnicos = new Set(ds.flatMap(v => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
+        const dsAsist = ds.reduce((acc: number, v: ScanResult<VidaComunitaria>) => acc + (v.data.numero_participantes || 0), 0);
+        const dsUnicos = new Set(ds.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
         barGroups.push({
             title: "Días Sagrados",
             bars: [
@@ -128,10 +128,10 @@ export function computeCycleChartData(
         });
     }
 
-    const f19 = vidaComunitaria.filter(v => v.data.tipo_actividad === "Fiesta de 19 días");
+    const f19 = vidaComunitaria.filter((v: ScanResult<VidaComunitaria>) => v.data.tipo_actividad === "Fiesta de 19 días");
     if (f19.length > 0) {
-        const fAsist = f19.reduce((acc, v) => acc + (v.data.numero_participantes || 0), 0);
-        const uf19 = new Set(f19.flatMap(v => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
+        const fAsist = f19.reduce((acc: number, v: ScanResult<VidaComunitaria>) => acc + (v.data.numero_participantes || 0), 0);
+        const uf19 = new Set(f19.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
         barGroups.push({
             title: "Fiesta de 19 Días",
             bars: [

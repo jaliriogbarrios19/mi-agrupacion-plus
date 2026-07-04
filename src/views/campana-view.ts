@@ -61,12 +61,12 @@ export class CampanaView extends ItemView {
         let { visitas } = s;
         if (this.searchQuery) visitas = visitas.filter(v => matchesSearch(v, this.searchQuery));
         visitas = sortByDateDesc(visitas);
-        const enCamp = visitas.filter(v => v.data.campana_expansion === true);
-        const alcanzadas = new Set(enCamp.flatMap(v => v.data.nombres_visitados)).size;
-        const nuevos = enCamp.filter(v => v.data.hogar_nuevo === true).length;
-        const bahais = visitas.filter(v => v.data.condicion === "Bahá'í").length;
-        const simp = visitas.filter(v => v.data.condicion === "Simpatizante").length;
-        const mSet = new Set(visitas.flatMap(v => v.data.maestros));
+        const enCamp = visitas.filter((v: ScanResult<Visita>) => v.data.campana_expansion === true);
+        const alcanzadas = new Set(enCamp.flatMap((v: ScanResult<Visita>) => v.data.nombres_visitados)).size;
+        const nuevos = enCamp.filter((v: ScanResult<Visita>) => v.data.hogar_nuevo === true).length;
+        const bahais = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Bahá'í").length;
+        const simp = visitas.filter((v: ScanResult<Visita>) => v.data.condicion === "Simpatizante").length;
+        const mSet = new Set(visitas.flatMap((v: ScanResult<Visita>) => v.data.maestros));
         const totalV = visitas.length;
         const hog = totalV > 0 ? estimarHogares(visitas) : 0;
         const g = contentEl.createDiv({ cls: "mi-agrupacion-section" });

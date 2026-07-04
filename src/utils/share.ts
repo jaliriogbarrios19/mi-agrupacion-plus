@@ -4,9 +4,10 @@ function emojiCondicion(c: string): string {
     return c === "Bahá'í" ? "⭐" : "🤝";
 }
 
-export function formatVisitaForShare(data: Record<string, unknown>): string {
-    const nombres = (data.nombres_visitados as string[]) || [];
-    const maestros = (data.maestros as string[]) || [];
+export function formatVisitaForShare(raw: Record<string, unknown>): string {
+    const data = raw as { nombres_visitados?: string[]; maestros?: string[]; condicion?: string; hubo_oracion?: boolean; hogar_nuevo?: boolean; fecha?: string; sector?: string; proposito_visita?: string; resumen?: string; campana_expansion?: boolean };
+    const nombres = data.nombres_visitados || [];
+    const maestros = data.maestros || [];
     const cond = emojiCondicion(String(data.condicion || ""));
     const oracion = data.hubo_oracion ? "Sí" : "No";
     const nuevo = data.hogar_nuevo ? "Sí" : "No";
@@ -23,10 +24,11 @@ export function formatVisitaForShare(data: Record<string, unknown>): string {
     return text;
 }
 
-export function formatVidaComunitariaForShare(data: Record<string, unknown>): string {
-    const bahais = (data.asist_bahais as string[]) || [];
-    const simps = (data.asist_simpatizantes as string[]) || [];
-    const total = (data.numero_participantes as number) || (bahais.length + simps.length);
+export function formatVidaComunitariaForShare(raw: Record<string, unknown>): string {
+    const data = raw as { tipo_actividad?: string; fecha?: string; nombre_evento?: string; sector?: string; numero_participantes?: number; asist_bahais?: string[]; asist_simpatizantes?: string[]; descripcion_actividad?: string };
+    const bahais = data.asist_bahais || [];
+    const simps = data.asist_simpatizantes || [];
+    const total = data.numero_participantes || (bahais.length + simps.length);
     let text = `🎉 *${String(data.tipo_actividad || "Actividad")} — ${String(data.fecha || "")}*\n`;
     text += `📌 ${String(data.nombre_evento || "")}\n`;
     text += `📍 Sector: ${String(data.sector || "")}\n`;
@@ -37,8 +39,9 @@ export function formatVidaComunitariaForShare(data: Record<string, unknown>): st
     return text;
 }
 
-export function formatProcesoEducativoForShare(data: Record<string, unknown>): string {
-    const participantes = (data.participantes as string[]) || [];
+export function formatProcesoEducativoForShare(raw: Record<string, unknown>): string {
+    const data = raw as { tipo?: string; fecha?: string; sector?: string; leccion?: string; libro?: string; participantes?: string[] };
+    const participantes = data.participantes || [];
     let text = `📚 *${String(data.tipo || "Proceso Educativo")} — ${String(data.fecha || "")}*\n`;
     text += `📍 Sector: ${String(data.sector || "")}\n`;
     if (data.leccion) text += `📖 Lección: ${String(data.leccion)}\n`;
@@ -59,6 +62,8 @@ export async function shareText(text: string, app: App): Promise<void> {
     }
 }
 
+interface VisitaExportEntry { nombres_visitados?: string[]; maestros?: string[]; proposito_visita?: string; resumen?: string; hubo_oracion?: boolean }
+
 export function formatVisitasExport(
     records: Record<string, unknown>[],
     title: string,
@@ -66,14 +71,15 @@ export function formatVisitasExport(
 ): string {
     let text = `📊 *${title}*\n${subtitle}\n`;
     text += `${records.length} visitas`;
-    const personas = new Set(records.flatMap(r => (r.nombres_visitados as string[]) || [])).size;
+    const personas = new Set(records.flatMap(r => ((r as VisitaExportEntry).nombres_visitados) || [])).size;
     text += ` | ${personas} personas`;
-    const allMaestros = new Set(records.flatMap(r => (r.maestros as string[]) || [])).size;
+    const allMaestros = new Set(records.flatMap(r => ((r as VisitaExportEntry).maestros) || [])).size;
     text += ` | ${allMaestros} maestros\n`;
 
     const groups = new Map<string, { maestros: string; visitas: Record<string, unknown>[] }>();
     for (const r of records) {
-        const ms = ((r.maestros as string[]) || []).join(", ");
+        const v = r as VisitaExportEntry;
+        const ms = (v.maestros || []).join(", ");
         if (!groups.has(ms)) {
             groups.set(ms, { maestros: ms, visitas: [] });
         }
@@ -85,8 +91,9 @@ export function formatVisitasExport(
         if (!first) text += "\n---\n";
         first = false;
         text += `\n👥 ${group.maestros}\n`;
-        for (const v of group.visitas) {
-            const visitados = ((v.nombres_visitados as string[]) || []).join(", ");
+        for (const r of group.visitas) {
+            const v = r as VisitaExportEntry;
+            const visitados = (v.nombres_visitados || []).join(", ");
             text += `\n• ${visitados}`;
             if (v.proposito_visita) text += `\n  🎯 ${String(v.proposito_visita)}`;
             if (v.resumen) text += `\n  📝 ${String(v.resumen)}`;
@@ -98,6 +105,8 @@ export function formatVisitasExport(
     return text;
 }
 
+interface ActividadExportEntry { fecha?: string; nombre_evento?: string; numero_participantes?: number; asist_bahais?: string[]; asist_simpatizantes?: string[] }
+
 export function formatActividadesExport(
     records: Record<string, unknown>[],
     title: string,
@@ -105,21 +114,24 @@ export function formatActividadesExport(
 ): string {
     let text = `📊 *${title}*\n${subtitle}\n`;
     text += `${records.length} actividades`;
-    const totalP = records.reduce((a, r) => a + (Number(r.numero_participantes) || 0), 0);
+    const totalP = records.reduce((a, r) => a + (Number((r as ActividadExportEntry).numero_participantes) || 0), 0);
     text += ` | ${totalP} participantes\n\n`;
     for (const r of records) {
-        const fecha = String(r.fecha || "").slice(0, 5);
-        const nombre = String(r.nombre_evento || "");
-        const p = Number(r.numero_participantes) || 0;
+        const v = r as ActividadExportEntry;
+        const fecha = String(v.fecha || "").slice(0, 5);
+        const nombre = String(v.nombre_evento || "");
+        const p = v.numero_participantes || 0;
         text += `• ${fecha} — ${nombre} (${p} part.)\n`;
-        const bahais = ((r.asist_bahais as string[]) || []);
+        const bahais = v.asist_bahais || [];
         if (bahais.length > 0) text += `  ⭐ ${bahais.join(", ")}\n`;
-        const simps = ((r.asist_simpatizantes as string[]) || []);
+        const simps = v.asist_simpatizantes || [];
         if (simps.length > 0) text += `  🤝 ${simps.join(", ")}\n`;
     }
     text += "\n📱 Registrado con Mi Agrupación";
     return text;
 }
+
+interface PExportEntry { fecha?: string; tipo?: string; participantes?: string[]; leccion?: string; libro?: string }
 
 export function formatPExport(
     records: Record<string, unknown>[],
@@ -129,13 +141,14 @@ export function formatPExport(
     let text = `📊 *${title}*\n${subtitle}\n`;
     text += `${records.length} registros\n\n`;
     for (const r of records) {
-        const fecha = String(r.fecha || "").slice(0, 5);
-        const tipo = String(r.tipo || "");
-        const part = ((r.participantes as string[]) || []).join(", ");
+        const v = r as PExportEntry;
+        const fecha = String(v.fecha || "").slice(0, 5);
+        const tipo = String(v.tipo || "");
+        const part = (v.participantes || []).join(", ");
         text += `• ${fecha} — ${tipo}\n`;
         if (part) text += `  👥 ${part}\n`;
-        if (r.leccion) text += `  📖 ${String(r.leccion)}\n`;
-        if (r.libro) text += `  📘 ${String(r.libro)}\n`;
+        if (v.leccion) text += `  📖 ${String(v.leccion)}\n`;
+        if (v.libro) text += `  📘 ${String(v.libro)}\n`;
     }
     text += "\n📱 Registrado con Mi Agrupación";
     return text;

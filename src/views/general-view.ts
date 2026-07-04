@@ -76,32 +76,32 @@ export class GeneralView extends ItemView {
         const { visitas: v, vidaComunitaria: vc, procesoEducativo: pe, reuniones: r, declaraciones: d } = data;
         let visitas = v, vidaComunitaria = vc, procesoEducativo = pe, reuniones = r, declaraciones = d;
         if (this.selectedSector !== "Todos los sectores") {
-            visitas = visitas.filter(rec => rec.data.sector === this.selectedSector);
-            vidaComunitaria = vidaComunitaria.filter(rec => rec.data.sector === this.selectedSector);
-            procesoEducativo = procesoEducativo.filter(rec => rec.data.sector === this.selectedSector);
-            reuniones = reuniones.filter(rec => rec.data.sector === this.selectedSector);
+            visitas = visitas.filter((rec: ScanResult<Visita>) => rec.data.sector === this.selectedSector);
+            vidaComunitaria = vidaComunitaria.filter((rec: ScanResult<VidaComunitaria>) => rec.data.sector === this.selectedSector);
+            procesoEducativo = procesoEducativo.filter((rec: ScanResult<ProcesoEducativo>) => rec.data.sector === this.selectedSector);
+            reuniones = reuniones.filter((rec: ScanResult<Reunion>) => rec.data.sector === this.selectedSector);
         }
         if (this.searchQuery) {
             const q = this.searchQuery;
-            visitas = visitas.filter(rec => matchesSearch(rec, q));
-            vidaComunitaria = vidaComunitaria.filter(rec => matchesSearch(rec, q));
-            procesoEducativo = procesoEducativo.filter(rec => matchesSearch(rec, q));
-            reuniones = reuniones.filter(rec => matchesSearch(rec, q));
+            visitas = visitas.filter((rec: ScanResult<Visita>) => matchesSearch(rec, q));
+            vidaComunitaria = vidaComunitaria.filter((rec: ScanResult<VidaComunitaria>) => matchesSearch(rec, q));
+            procesoEducativo = procesoEducativo.filter((rec: ScanResult<ProcesoEducativo>) => matchesSearch(rec, q));
+            reuniones = reuniones.filter((rec: ScanResult<Reunion>) => matchesSearch(rec, q));
         }
         visitas = sortByDateDesc(visitas);
         vidaComunitaria = sortByDateDesc(vidaComunitaria);
         procesoEducativo = sortByDateDesc(procesoEducativo);
         reuniones = sortByDateDesc(reuniones);
         const tc = (d: ScanResult<Visita | VidaComunitaria | ProcesoEducativo | Reunion>[]) =>
-            d.map(r => ({ file: r.file, data: r.data as unknown as Record<string, unknown> }));
+            d.map((r: ScanResult<Visita | VidaComunitaria | ProcesoEducativo | Reunion>) => ({ file: r.file, data: r.data as unknown as Record<string, unknown> }));
         const totalV = visitas.length;
-        const personas = new Set(visitas.flatMap(r => r.data.nombres_visitados)).size;
+        const personas = new Set(visitas.flatMap((r: ScanResult<Visita>) => r.data.nombres_visitados)).size;
         const hogares = totalV > 0 ? estimarHogares(visitas) : 0;
-        const mSet = new Set(visitas.flatMap(r => r.data.maestros));
-        const fiestas = vidaComunitaria.filter(r => r.data.tipo_actividad === "Fiesta de 19 días");
-        const sagrados = vidaComunitaria.filter(r => r.data.tipo_actividad === "Día Sagrado");
-        const otras = vidaComunitaria.filter(r => r.data.tipo_actividad !== "Fiesta de 19 días" && r.data.tipo_actividad !== "Día Sagrado");
-        const participantesUnicos = new Set(fiestas.flatMap(v => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
+        const mSet = new Set(visitas.flatMap((r: ScanResult<Visita>) => r.data.maestros));
+        const fiestas = vidaComunitaria.filter((r: ScanResult<VidaComunitaria>) => r.data.tipo_actividad === "Fiesta de 19 días");
+        const sagrados = vidaComunitaria.filter((r: ScanResult<VidaComunitaria>) => r.data.tipo_actividad === "Día Sagrado");
+        const otras = vidaComunitaria.filter((r: ScanResult<VidaComunitaria>) => r.data.tipo_actividad !== "Fiesta de 19 días" && r.data.tipo_actividad !== "Día Sagrado");
+        const participantesUnicos = new Set(fiestas.flatMap((v: ScanResult<VidaComunitaria>) => [...(v.data.asist_bahais || []), ...(v.data.asist_simpatizantes || [])]));
         const grid = contentEl.createDiv({ cls: "mi-agrupacion-kpi-grid" });
         const onDeleted = () => { void this.render(); };
         kpi(grid, "Visitas realizadas", String(totalV), () => new RecordListModal(this.app, "Visitas", tc(visitas), (f) => this.openEditModal(f, "visita"), this.dataManager, onDeleted).open());
@@ -114,10 +114,10 @@ export class GeneralView extends ItemView {
         kpi(grid, "Participantes en F19D", String(participantesUnicos.size), () => new PersonListModal(this.app, "Participantes en Fiestas de 19 días", [...participantesUnicos].sort()).open());
         const peCount = procesoEducativo.length;
         kpi(grid, "Programa Educativo", String(peCount), () => new RecordListModal(this.app, "Programa Educativo", tc(procesoEducativo), (f) => this.openEditModal(f, "pe"), this.dataManager, onDeleted).open());
-        const asistentesReuniones = new Set(reuniones.flatMap(r => r.data.asist_bahais));
+        const asistentesReuniones = new Set(reuniones.flatMap((r: ScanResult<Reunion>) => r.data.asist_bahais));
         kpi(grid, "Reuniones", String(reuniones.length), () => new RecordListModal(this.app, "Reuniones", tc(reuniones), (f) => this.openEditModal(f, "reunion"), this.dataManager, onDeleted).open());
         kpi(grid, "Asistentes a reuniones", String(asistentesReuniones.size), () => new PersonListModal(this.app, "Asistentes a reuniones", [...asistentesReuniones].sort()).open());
-        kpi(grid, "Ingresos", String(declaraciones.length), () => new RecordListModal(this.app, "Ingresos", declaraciones.map(r => ({ file: r.file, data: r.data as unknown as Record<string, unknown> })), (f) => this.openEditModal(f, "declaracion"), this.dataManager, onDeleted).open());
+        kpi(grid, "Ingresos", String(declaraciones.length), () =>             new RecordListModal(this.app, "Ingresos", declaraciones.map((r: ScanResult<Declaracion>) => ({ file: r.file, data: r.data as unknown as Record<string, unknown> })), (f) => this.openEditModal(f, "declaracion"), this.dataManager, onDeleted).open());
 
         renderChartToggle(contentEl, "gráficos", this.chartExpanded, () => { this.chartExpanded = !this.chartExpanded; void this.render(); });
         if (!this.chartExpanded) return;

@@ -106,13 +106,13 @@ export default class MiAgrupacionPlugin extends Plugin {
                 void (async () => {
                     const approved = await checkApprovalCached();
                     if (approved) {
-                        this.startSync();
+                        void this.startSync();
                     } else {
                         this.syncStatusBar?.setText("⚠️ Pendiente de aprobación");
                     }
                 })();
             } else {
-                this.startSync();
+                void this.startSync();
             }
         }
 
