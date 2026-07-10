@@ -121,11 +121,13 @@ export async function api(
 
     try {
         const res = await requestUrl(params);
-        return { status: res.status, json: res.json };
+        let json: unknown;
+        try { json = res.json; } catch { json = null; }
+        return { status: res.status, json };
     } catch (e) {
         const err = e as Record<string, unknown> | undefined;
         const status = typeof err?.status === "number" ? err.status : 0;
-        const json = err?.json ?? { error: String(e) };
+        const json = err?.json ?? null;
 
         if (status === 401 && accessToken && !sessionExpired) {
             const refreshed = await refreshSession();
@@ -133,11 +135,13 @@ export async function api(
                 params.headers = { ...authHeaders(), ...extraHeaders };
                 try {
                     const retry = await requestUrl(params);
-                    return { status: retry.status, json: retry.json };
+                    let retryJson: unknown;
+                    try { retryJson = retry.json; } catch { retryJson = null; }
+                    return { status: retry.status, json: retryJson };
                 } catch (retryErr) {
                     const rObj = retryErr as Record<string, unknown> | undefined;
                     const rStatus = typeof rObj?.status === "number" ? rObj.status : 0;
-                    return { status: rStatus, json: rObj?.json ?? { error: String(retryErr) } };
+                    return { status: rStatus, json: rObj?.json ?? null };
                 }
             }
             markSessionExpired();
@@ -279,16 +283,31 @@ export async function restInsertOrUpdate(
     body: Record<string, unknown>,
     matchParams: Record<string, string>,
 ): Promise<boolean> {
-    const query = new URLSearchParams(matchParams).toString();
+    // Build filter query with eq. prefix for PostgREST
+    const filterParams: Record<string, string> = {};
+    for (const [key, val] of Object.entries(matchParams)) {
+        filterParams[key] = val.startsWith("eq.") ? val : `eq.${val}`;
+    }
+    const query = new URLSearchParams(filterParams).toString();
     const existing = await api("GET", `/rest/v1/${table}?${query}&limit=1`);
     if (existing.status >= 200 && existing.status < 300) {
         const rows = (existing.json as unknown[]) || [];
         if (rows.length > 0) {
             const res = await api("PATCH", `/rest/v1/${table}?${query}`, body);
+            if (res.status < 200 || res.status >= 300) {
+                const err = res.json as Record<string, unknown> | undefined;
+                const msg = (err?.message as string) || (err?.error as string) || `HTTP ${res.status}`;
+                console.warn(`Mi Agrupacion Plus — PATCH ${table} failed (${res.status}):`, msg);
+            }
             return res.status >= 200 && res.status < 300;
         }
     }
     const res = await api("POST", `/rest/v1/${table}`, body);
+    if (res.status < 200 || res.status >= 300) {
+        const err = res.json as Record<string, unknown> | undefined;
+        const msg = (err?.message as string) || (err?.error as string) || `HTTP ${res.status}`;
+        console.warn(`Mi Agrupacion Plus — POST ${table} failed (${res.status}):`, msg);
+    }
     return res.status >= 200 && res.status < 300;
 }
 

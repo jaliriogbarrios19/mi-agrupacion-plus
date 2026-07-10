@@ -1,5 +1,5 @@
 import { type App, Notice } from "obsidian";
-import { restGet, restUpsert, restDelete, isLoggedIn, getVaultSectores, setVaultSectores, checkApprovalCached } from "./client";
+import { restGet, restInsertOrUpdate, restDelete, isLoggedIn, getVaultSectores, setVaultSectores, checkApprovalCached } from "./client";
 import { PullHandler, type SyncState } from "./sync-pull";
 import { PushHandler } from "./sync-push";
 import { ConfirmModal } from "../utils/confirm";
@@ -174,7 +174,7 @@ export class SyncManager {
             if (this.pushHandler.isExcluded(file.path)) continue;
             try {
                 const content = await this.app.vault.cachedRead(file);
-                const ok = await restUpsert(
+                const ok = await restInsertOrUpdate(
                     "notes",
                     {
                         vault_id: this.vaultId,
@@ -182,7 +182,7 @@ export class SyncManager {
                         content,
                         updated_at: new Date().toISOString(),
                     },
-                    "vault_id,path"
+                    { vault_id: this.vaultId, path: file.path }
                 );
                 if (ok) pushed++; else skipped++;
             } catch {
