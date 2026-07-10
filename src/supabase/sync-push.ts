@@ -1,4 +1,4 @@
-import { type App, TFile, normalizePath, Notice } from "obsidian";
+import { type App, TFile, normalizePath } from "obsidian";
 import { restInsertOrUpdate, restDelete, isLoggedIn } from "./client";
 import { validateContent } from "./rate-limiter";
 
