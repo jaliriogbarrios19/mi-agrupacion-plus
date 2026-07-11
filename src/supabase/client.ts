@@ -285,9 +285,8 @@ export async function restInsertOrUpdate(
 ): Promise<boolean> {
     // Build filter query with eq. prefix for PostgREST
     const filterParams: Record<string, string> = {};
-    for (const entry of Object.entries(matchParams)) {
-        const key: string = entry[0];
-        const val: string = entry[1];
+    for (const key in matchParams) {
+        const val: string = matchParams[key];
         filterParams[key] = val.startsWith("eq.") ? val : `eq.${val}`;
     }
     const query = new URLSearchParams(filterParams).toString();

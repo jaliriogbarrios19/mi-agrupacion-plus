@@ -29,7 +29,10 @@ const VC_FIELDS: RecordField[] = [
     { key: "sector", label: "Sector" },
     { key: "tipo_actividad", label: "Tipo" },
     { key: "nombre_evento", label: "Evento" },
+    { key: "asist_bahais", label: "Asist. Bahá'ís", list: true },
+    { key: "asist_simpatizantes", label: "Asist. Simpatizantes", list: true },
     { key: "numero_participantes", label: "Participantes" },
+    { key: "reportado_por", label: "Reportado por" },
     { key: "descripcion_actividad", label: "Descripción" },
 ];
 

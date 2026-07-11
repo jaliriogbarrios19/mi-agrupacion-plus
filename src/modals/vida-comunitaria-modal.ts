@@ -9,7 +9,7 @@ import { ConfirmModal } from "../utils/confirm";
 import { formatVidaComunitariaForShare, shareText } from "../utils/share";
 import { TIPOS_ACTIVIDAD, type Maestro, type VidaComunitaria } from "../types";
 import { vidaComunitariaTemplate } from "../data/templates";
-import { renderTagsField, renderTagChips } from "./tags-helpers";
+import { renderTagsField } from "./tags-helpers";
 
 export class VidaComunitariaModal extends Modal {
     private dataManager: DataManager;
@@ -146,10 +146,6 @@ export class VidaComunitariaModal extends Modal {
             this.asistSimpatizantes,
             (val) => {
                 this.asistSimpatizantes = val;
-                renderTagChips(
-                    this.tagsSimpatizantesEl,
-                    this.asistSimpatizantes
-                );
             },
             (el) => (this.tagsSimpatizantesEl = el)
         );

@@ -18,13 +18,18 @@ export function renderTagsField(
     const addBtn = row.createEl("button", { text: "Agregar" });
     const chipsEl = wrapper.createDiv();
     setEl(chipsEl);
-    renderTagChips(chipsEl, items, onUpdate);
+
+    const renderChips = () => {
+        renderTagChips(chipsEl, items, onUpdate, renderChips);
+    };
+    renderChips();
 
     const addItem = () => {
         const val = input.value.trim();
         if (!val) return;
-        const updated = [...items, val];
-        onUpdate(updated);
+        items.push(val);
+        onUpdate([...items]);
+        renderChips();
         input.value = "";
     };
     addBtn.addEventListener("click", addItem);
@@ -40,6 +45,7 @@ export function renderTagChips(
     container: HTMLElement,
     items: string[],
     onUpdate?: (val: string[]) => void,
+    onRender?: () => void,
 ): void {
     container.empty();
     for (const item of items) {
@@ -54,7 +60,8 @@ export function renderTagChips(
             if (idx >= 0) {
                 items.splice(idx, 1);
                 if (onUpdate) onUpdate([...items]);
-                renderTagChips(container, items, onUpdate);
+                if (onRender) onRender();
+                else renderTagChips(container, items, onUpdate);
             }
         });
     }
