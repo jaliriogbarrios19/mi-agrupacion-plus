@@ -11,6 +11,7 @@ export function visitaTemplate(data: Visita): string {
     body += `**Sector:** ${data.sector}\n`;
     body += `**Condición:** ${data.condicion}\n`;
     body += `**Hogar nuevo:** ${data.hogar_nuevo ? "Sí" : "No"}\n`;
+    body += `**Primera vez en ciclo:** ${data.primera_visita_ciclo ? "Sí" : "No"}\n`;
     body += `**Oración:** ${data.hubo_oracion ? "Sí" : "No"}\n`;
     body += `**Campaña:** ${data.campana_expansion ? "Sí" : "No"}\n`;
     body += `**Propósito:** ${data.proposito_visita}\n`;

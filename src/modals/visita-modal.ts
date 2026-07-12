@@ -31,6 +31,7 @@ export class VisitaModal extends Modal {
     private nombresVisitados: string[] = [];
     private condicion = CONDICIONES[0];
     private hogarNuevo = false;
+    private primeraVisitaCiclo = true;
     private huboOracion = false;
     private campanaExpansion = false;
     private proposito = "";
@@ -77,7 +78,7 @@ export class VisitaModal extends Modal {
         contentEl.addClass("mi-agrupacion-modal");
 
         const isEditing = !!this.editFile;
-        contentEl.createEl("h3", { text: isEditing ? "Editar Visita" : "Nuevo Registro de Visita" });
+                new Setting(contentEl).setName(isEditing ? "Editar Visita" : "Nuevo Registro de Visita").setHeading();
 
         if (isEditing) {
             const data = await this.dataManager.readRecord(this.editFile!);
@@ -86,6 +87,7 @@ export class VisitaModal extends Modal {
             this.nombresVisitados = (data.nombres_visitados as string[]) || [];
             this.condicion = String(data.condicion || CONDICIONES[0]);
             this.hogarNuevo = !!data.hogar_nuevo;
+            this.primeraVisitaCiclo = data.primera_visita_ciclo !== false;
             this.huboOracion = !!data.hubo_oracion;
             this.campanaExpansion = !!data.campana_expansion;
             this.maestrosSeleccionados = (data.maestros as string[]) || [];
@@ -165,6 +167,13 @@ export class VisitaModal extends Modal {
             .setName("Hubo oración")
             .addToggle((t) =>
                 t.setValue(false).onChange((v) => { this.huboOracion = v; })
+            );
+
+        new Setting(form)
+            .setName("Primera visita del ciclo")
+            .setDesc("Marcar si es la primera vez que se visita este hogar en el ciclo")
+            .addToggle((t) =>
+                t.setValue(this.primeraVisitaCiclo).onChange((v) => { this.primeraVisitaCiclo = v; })
             );
 
         new Setting(form)
@@ -455,6 +464,7 @@ export class VisitaModal extends Modal {
             nombres_visitados: this.nombresVisitados,
             condicion: this.condicion,
             hogar_nuevo: this.hogarNuevo,
+            primera_visita_ciclo: this.primeraVisitaCiclo,
             hubo_oracion: this.huboOracion,
             campana_expansion: this.campanaExpansion,
             maestros: this.maestrosSeleccionados,

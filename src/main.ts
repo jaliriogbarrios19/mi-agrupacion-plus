@@ -1,12 +1,13 @@
 import { Plugin, Notice, TFolder } from "obsidian";
 import type { MiAgrupacionSettings } from "./types";
-import { DEFAULT_SETTINGS, DEFAULT_SECTORES, VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA } from "./types";
+import { DEFAULT_SETTINGS, DEFAULT_SECTORES, VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA, VIEW_TYPE_BALANCE } from "./types";
 import { DataManager } from "./data/manager";
 import { MiAgrupacionSettingTab } from "./settings";
 import { DashboardView } from "./views/dashboard-view";
 import { GeneralView } from "./views/general-view";
 import { ResumenSRPView } from "./views/resumen-srp-view";
 import { CampanaView } from "./views/campana-view";
+import { BalanceView } from "./views/balance-view";
 import { VisitaModal } from "./modals/visita-modal";
 import { VidaComunitariaModal } from "./modals/vida-comunitaria-modal";
 import { ProcesoEducativoModal } from "./modals/proceso-educativo-modal";
@@ -135,6 +136,7 @@ export default class MiAgrupacionPlugin extends Plugin {
         this.registerView(VIEW_TYPE_GENERAL, (leaf) => new GeneralView(leaf, this.settings, this.dataManager, goToDashboard));
         this.registerView(VIEW_TYPE_RESUMEN_SRP, (leaf) => new ResumenSRPView(leaf, this.settings, this.dataManager, goToDashboard));
         this.registerView(VIEW_TYPE_CAMPANA, (leaf) => new CampanaView(leaf, this.settings, this.dataManager, goToDashboard));
+        this.registerView(VIEW_TYPE_BALANCE, (leaf) => new BalanceView(leaf, this.settings, this.dataManager, goToDashboard));
     }
 
     private registerCommands(): void {
@@ -142,6 +144,7 @@ export default class MiAgrupacionPlugin extends Plugin {
         this.addCommand({ id: "open-general", name: "Abrir vista general", callback: () => { void this.activateView(VIEW_TYPE_GENERAL); } });
         this.addCommand({ id: "open-resumen-srp", name: "Abrir resumen SRP", callback: () => { void this.activateView(VIEW_TYPE_RESUMEN_SRP); } });
         this.addCommand({ id: "open-campana", name: "Abrir campaña de enseñanza", callback: () => { void this.activateView(VIEW_TYPE_CAMPANA); } });
+        this.addCommand({ id: "open-balance", name: "Abrir balance por período", callback: () => { void this.activateView(VIEW_TYPE_BALANCE); } });
         this.addCommand({ id: "nueva-visita", name: "Nuevo registro de visita", callback: () => this.openVisitaModal() });
         this.addCommand({ id: "nueva-actividad", name: "Nueva actividad comunitaria", callback: () => this.openVidaComunitariaModal() });
         this.addCommand({ id: "nuevo-proceso-educativo", name: "Nuevo registro de proceso educativo", callback: () => this.openProcesoEducativoModal() });
@@ -173,7 +176,7 @@ export default class MiAgrupacionPlugin extends Plugin {
     }
 
     refreshAllViews(): void {
-        for (const vt of [VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA]) {
+        for (const vt of [VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA, VIEW_TYPE_BALANCE]) {
             const view = this.getExistingView(vt);
             if (view && typeof (view as { render: () => Promise<void> }).render === "function") { void (view as { render: () => Promise<void> }).render(); }
         }
@@ -216,7 +219,7 @@ export default class MiAgrupacionPlugin extends Plugin {
         const isAdmin = this.settings.setupMode === "admin";
         this.syncManager = new SyncManager(this.app, this.settings.vaultId, this.settings.vaultName, (text) => { this.syncStatusBar?.setText(text); }, [this.settings.carpetaBase], (sectores) => {
             if (JSON.stringify(this.settings.sectores) !== JSON.stringify(sectores)) { this.settings.sectores = sectores; void this.saveSettings(); }
-        }, localSectores, isAdmin);
+        }, localSectores, isAdmin, () => this.refreshAllViews());
         this.syncManager.start(this.settings.syncInterval);
         this.syncStatusBar?.setText("☁️ Conectado");
     }

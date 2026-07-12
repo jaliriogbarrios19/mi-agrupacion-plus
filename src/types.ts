@@ -12,6 +12,7 @@ export interface Visita {
     nombres_visitados: string[];
     condicion: string;
     hogar_nuevo: boolean;
+    primera_visita_ciclo: boolean;
     hubo_oracion: boolean;
     campana_expansion: boolean;
     maestros: string[];
@@ -142,3 +143,4 @@ export const VIEW_TYPE_GENERAL = "mi-agrupacion-plus-general";
 export const VIEW_TYPE_RESUMEN_SRP = "mi-agrupacion-plus-resumen-srp";
 export const VIEW_TYPE_CAMPANA = "mi-agrupacion-plus-campana";
 export const VIEW_TYPE_REGISTRO_REUNIONES = "mi-agrupacion-plus-registro-reuniones";
+export const VIEW_TYPE_BALANCE = "mi-agrupacion-plus-balance";

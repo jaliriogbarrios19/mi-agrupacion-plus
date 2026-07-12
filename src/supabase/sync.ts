@@ -19,6 +19,7 @@ export class SyncManager {
     private pushHandler: PushHandler;
     private syncing = false;
     private isAdmin = false;
+    private onRefreshViews: () => void;
     public isPulling = false;
 
     constructor(
@@ -29,7 +30,8 @@ export class SyncManager {
         syncFolders: string[] = ["Registros"],
         onSectoresUpdate: (sectores: string[]) => void = () => {},
         defaultSectores: string[] = [],
-        isAdmin = false
+        isAdmin = false,
+        onRefreshViews: () => void = () => {},
     ) {
         this.app = app;
         this.vaultId = vaultId;
@@ -38,6 +40,7 @@ export class SyncManager {
         this.onSectoresUpdate = onSectoresUpdate;
         this.defaultSectores = defaultSectores;
         this.isAdmin = isAdmin;
+        this.onRefreshViews = onRefreshViews;
         this.state = {
             vaultReady: false,
             lastPullAt: "",
@@ -118,7 +121,11 @@ export class SyncManager {
         this.syncing = true;
         this.isPulling = true;
         try {
-            return await this.pullHandler.pullChanges();
+            const count = await this.pullHandler.pullChanges();
+            if (count > 0) {
+                this.onRefreshViews();
+            }
+            return count;
         } finally {
             this.isPulling = false;
             this.syncing = false;

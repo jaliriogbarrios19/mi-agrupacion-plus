@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf, TFile, Notice, normalizePath, Platform, Setting } from "obsidian";
 import type { MiAgrupacionSettings } from "../types";
-import { VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA } from "../types";
+import { VIEW_TYPE_DASHBOARD, VIEW_TYPE_GENERAL, VIEW_TYPE_RESUMEN_SRP, VIEW_TYPE_CAMPANA, VIEW_TYPE_BALANCE } from "../types";
 import { DataManager } from "../data/manager";
 import { ExportModal } from "../modals/export-modal";
 import { generateInforme } from "../utils/informe";
@@ -72,6 +72,7 @@ export class DashboardView extends ItemView {
         new Setting(container).setName("Reportes").setHeading();
         const reportes = container.createDiv({ cls: "mi-agrupacion-dash-actions" });
         this.reportBtn(reportes, "Vista General", VIEW_TYPE_GENERAL);
+        this.reportBtn(reportes, "Balance por período", VIEW_TYPE_BALANCE);
         this.reportBtn(reportes, "Resumen SRP", VIEW_TYPE_RESUMEN_SRP);
         this.reportBtn(reportes, "Campaña de Enseñanza", VIEW_TYPE_CAMPANA);
         const exportBtn = container.createEl("button", { cls: "mi-agrupacion-dash-btn" });
