@@ -83,12 +83,12 @@ export class CampanaView extends ItemView {
             if (v.data.condicion === "Simpatizante") simp++;
         }
         const mFlat: string[] = [];
-        for (const v of visitas) {
+        for (const v of enCamp) {
             for (const m of v.data.maestros) { mFlat.push(m); }
         }
         const mSet = new Set(mFlat);
-        const totalV = visitas.length;
-        const hog = totalV > 0 ? estimarHogares(visitas) : 0;
+        const totalV = enCamp.length;
+        const hog = totalV > 0 ? estimarHogares(enCamp) : 0;
         const g = contentEl.createDiv({ cls: "mi-agrupacion-section" });
         if (enCamp.length > 0) {
             g.createEl("p", { text: `Personas alcanzadas: ${alcanzadas}`, cls: "mi-agrupacion-stat" });

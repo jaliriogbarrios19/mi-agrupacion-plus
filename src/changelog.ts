@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        version: "1.5.1",
+        date: "2026-07-18",
+        changes: [
+            { type: "fix", text: "Campaña de Expansión: Maestros, Total de visitas y ~Hogares visitados ahora filtran correctamente solo las visitas marcadas como campaña." },
+        ],
+    },
+    {
         version: "1.5.0",
         date: "2026-07-12",
         changes: [

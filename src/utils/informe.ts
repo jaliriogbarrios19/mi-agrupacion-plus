@@ -245,13 +245,13 @@ export function generateInforme(
             if (v.data.condicion === "Simpatizante") simp++;
         }
         const campMaestrosSet = new Set<string>();
-        for (const v of visitas) {
+        for (const v of enCamp) {
             for (const m of v.data.maestros) {
                 campMaestrosSet.add(m);
             }
         }
-        const totalV = visitas.length;
-        const hog = totalV > 0 ? estimarHogares(visitas) : 0;
+        const totalV = enCamp.length;
+        const hog = totalV > 0 ? estimarHogares(enCamp) : 0;
         md += `- Personas alcanzadas: ${alcanzadas}\n`;
         md += `- Maestros únicos: ${campMaestrosSet.size}\n`;
         md += `- Hogares nuevos: ${nuevos}\n`;
